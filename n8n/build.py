@@ -139,7 +139,11 @@ workflow = {
     "meta": {"instanceId": ""},
 }
 
-if __name__ == "__main__":
+def main_write():
     out = ROOT / "n8n" / "g1-signal-scout.json"
     out.write_text(json.dumps(workflow, indent=2, ensure_ascii=False) + "\n")
     print(f"wrote {out.relative_to(ROOT)}: {len(nodes)} nodes, {len(feeds())} feeds")
+
+
+if __name__ == "__main__":
+    main_write()
