@@ -1,0 +1,272 @@
+{
+  "name": "G1 Weekly Signal Scout",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 6,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "id": "15b85f55-f71a-5789-8137-f03c37a44e14",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Copy of config/feeds.md (n8n cannot read the repo). Rebuilt by n8n/build.py.\nconst feeds = [\n  {\n    \"source\": \"MarTech\",\n    \"url\": \"https://martech.org/feed/\"\n  },\n  {\n    \"source\": \"Marketing AI Institute\",\n    \"url\": \"https://www.marketingaiinstitute.com/blog/rss.xml\"\n  },\n  {\n    \"source\": \"Marketing Brew\",\n    \"url\": \"https://www.marketingbrew.com/feed.xml\"\n  },\n  {\n    \"source\": \"HubSpot Marketing Blog\",\n    \"url\": \"https://blog.hubspot.com/marketing/rss.xml\"\n  },\n  {\n    \"source\": \"Salesforce Blog\",\n    \"url\": \"https://www.salesforce.com/blog/feed/\"\n  },\n  {\n    \"source\": \"Microsoft 365 Blog\",\n    \"url\": \"https://www.microsoft.com/en-us/microsoft-365/blog/feed/\"\n  },\n  {\n    \"source\": \"OpenAI News\",\n    \"url\": \"https://openai.com/news/rss.xml\"\n  },\n  {\n    \"source\": \"Google AI (The Keyword)\",\n    \"url\": \"https://blog.google/technology/ai/rss/\"\n  },\n  {\n    \"source\": \"n8n Blog\",\n    \"url\": \"https://blog.n8n.io/rss/\"\n  },\n  {\n    \"source\": \"Zapier Blog\",\n    \"url\": \"https://zapier.com/blog/feeds/latest/\"\n  },\n  {\n    \"source\": \"Model Context Protocol Blog\",\n    \"url\": \"https://blog.modelcontextprotocol.io/index.xml\"\n  },\n  {\n    \"source\": \"Stripe Blog\",\n    \"url\": \"https://stripe.com/blog/feed.rss\"\n  },\n  {\n    \"source\": \"Shopify Engineering\",\n    \"url\": \"https://shopify.engineering/blog.atom\"\n  },\n  {\n    \"source\": \"Simon Willison's Weblog\",\n    \"url\": \"https://simonwillison.net/atom/everything/\"\n  },\n  {\n    \"source\": \"Latent Space\",\n    \"url\": \"https://www.latent.space/feed\"\n  }\n];\nreturn feeds.map(f => ({ json: f }));\n"
+      },
+      "id": "4ae80e46-344d-56ad-be36-66a44232a120",
+      "name": "Feed list",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "id": "67650d60-88b9-5851-bc1e-d8106ac3617a",
+      "name": "RSS Read",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        440,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "id": "88e39f98-67c8-5f96-bb4e-f48e6cd2fb30",
+      "name": "Manual Trigger (fixtures)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "fileSelector": "/Users/shanelabounty/Projects/agentic-track/g1-signal-scout/fixtures/feed-items.json",
+        "options": {}
+      },
+      "id": "d71149d6-26d9-52ef-85e1-c4dcb1dfc822",
+      "name": "Read fixtures",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "id": "d2b4fb09-1154-5887-a951-51beca730e8d",
+      "name": "Extract JSON",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.2,
+      "position": [
+        440,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract From File puts the parsed JSON under .data; turn the array into items.\nconst d = $input.first().json;\nconst arr = Array.isArray(d) ? d : (Array.isArray(d.data) ? d.data : [d]);\nreturn arr.map(j => ({ json: j }));\n"
+      },
+      "id": "2df2ae94-c602-5c6e-a5cf-02f57454e1e4",
+      "name": "Split fixtures",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// One item per feed entry: title, url, source, date, excerpt. Drops stale and in-run duplicates.\nconst FRESH_DAYS = 7;\nconst cutoff = Date.now() - FRESH_DAYS * 24 * 60 * 60 * 1000;\n\n// hostname -> source name, from the Feed list node when it ran (live path); else the hostname.\nconst sources = {};\ntry { for (const f of $('Feed list').all()) sources[new URL(f.json.url).hostname] = f.json.source; } catch (e) {}\n\nfunction cleanUrl(u) {\n  try {\n    const url = new URL(u.trim());\n    for (const k of [...url.searchParams.keys()]) if (/^(utm_|mc_|ref$|source$)/i.test(k)) url.searchParams.delete(k);\n    url.hash = '';\n    return url.toString();\n  } catch (e) { return (u || '').trim(); }\n}\n\nconst seen = new Set();\nconst out = [];\nfor (const item of $input.all()) {\n  const j = item.json;\n  const url = cleanUrl(j.link || j.guid || '');\n  if (!url || seen.has(url)) continue;\n  const date = j.isoDate || j.pubDate || '';\n  const t = Date.parse(date);\n  if (!isNaN(t) && t < cutoff) continue;\n  seen.add(url);\n  let host = '';\n  try { host = new URL(url).hostname; } catch (e) {}\n  out.push({ json: {\n    title: (j.title || '').trim(),\n    url,\n    source: sources[host] || host.replace(/^www\\./, ''),\n    date: isNaN(t) ? date : new Date(t).toISOString(),\n    excerpt: (j.contentSnippet || '').replace(/\\s+/g, ' ').trim().slice(0, 300),\n  } });\n}\nreturn out;\n"
+      },
+      "id": "3caefc87-36ec-51d6-a736-b6a4a03fc7ff",
+      "name": "Normalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "returnAll": true,
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "KY3yNvowzRzwrfgH",
+          "cachedResultName": "seen_items"
+        },
+        "filters": {},
+        "matchType": "anyCondition",
+        "options": {}
+      },
+      "id": "99c943b3-5d52-5f91-b956-95450b60c1cd",
+      "name": "Seen rows",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        120
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input: every row of seen_items (one empty item if the table is empty). Output: Normalize items not in it.\nconst seen = new Set($input.all().map(i => i.json.url).filter(Boolean));\nreturn $('Normalize').all().filter(i => !seen.has(i.json.url));\n"
+      },
+      "id": "9afd2aef-f9ec-578b-bdca-be892892a87b",
+      "name": "Drop seen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        120
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Feed list",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Feed list": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Trigger (fixtures)": {
+      "main": [
+        [
+          {
+            "node": "Read fixtures",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read fixtures": {
+      "main": [
+        [
+          {
+            "node": "Extract JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract JSON": {
+      "main": [
+        [
+          {
+            "node": "Split fixtures",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split fixtures": {
+      "main": [
+        [
+          {
+            "node": "Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize": {
+      "main": [
+        [
+          {
+            "node": "Seen rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seen rows": {
+      "main": [
+        [
+          {
+            "node": "Drop seen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Chicago"
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": ""
+  }
+}
