@@ -18,10 +18,10 @@ If an id differs in your install, edit the constants at the top of `n8n/build.py
 2. Re-importing creates a second copy; delete the old one first, or open the old one and use **⋯ → Import from File** inside it to replace its nodes.
 3. The Schedule Trigger is imported **inactive**. Leave it off until the owner says go (D-6, H4).
 
-## Run with fixtures (no network)
-
-Click **Execute workflow**. With a Manual Trigger present, that runs the fixtures path: Read fixtures → Extract JSON → Split fixtures → Normalize → Seen rows → Drop seen. Fixtures are read from the repo path baked into the Read fixtures node (`fixtures/feed-items.json`); regenerate them with `python3 fixtures/make-fixtures.py` if the 7-day freshness window has emptied them.
-
 ## Run live (real feeds)
 
-Open the **Schedule Trigger** node and click **Execute step**. That fires it once now and runs the live path: Feed list → RSS Read → Normalize → Seen rows → Drop seen. Nothing is marked seen until the Drive write succeeds (B7).
+Click **Execute workflow**. On this install that runs from the Schedule Trigger (fires once, now): Feed list → RSS Read → Normalize → Seen rows → Drop seen → … Nothing is marked seen until the Drive write succeeds (B7). First live run on 2026-11-04: 15 feeds → 2069 RSS items → 106 from the last 7 days.
+
+## Run with fixtures (no network)
+
+Open the **Split fixtures** node and click **Execute step**; n8n runs the fixtures path up to it (Manual Trigger → Read fixtures → Extract JSON → Split fixtures), then Execute step on **Drop seen** continues from there. Fixtures are read from the repo path baked into the Read fixtures node (`fixtures/feed-items.json`); regenerate them with `python3 fixtures/make-fixtures.py` if the 7-day freshness window has emptied them.

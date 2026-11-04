@@ -51,16 +51,15 @@ const FRESH_DAYS = {FRESH_DAYS};
 const cutoff = Date.now() - FRESH_DAYS * 24 * 60 * 60 * 1000;
 
 // hostname -> source name, from the Feed list node when it ran (live path); else the hostname.
+// No URL global in n8n's Code sandbox, so hostnames and query strings are handled with regex.
+function hostOf(u) {{ const m = /^https?:\\/\\/([^/?#]+)/i.exec(u || ''); return m ? m[1].toLowerCase() : ''; }}
 const sources = {{}};
-try {{ for (const f of $('Feed list').all()) sources[new URL(f.json.url).hostname] = f.json.source; }} catch (e) {{}}
+try {{ for (const f of $('Feed list').all()) sources[hostOf(f.json.url)] = f.json.source; }} catch (e) {{}}
 
 function cleanUrl(u) {{
-  try {{
-    const url = new URL(u.trim());
-    for (const k of [...url.searchParams.keys()]) if (/^(utm_|mc_|ref$|source$)/i.test(k)) url.searchParams.delete(k);
-    url.hash = '';
-    return url.toString();
-  }} catch (e) {{ return (u || '').trim(); }}
+  const [base, q = ''] = (u || '').trim().split('#')[0].split('?');
+  const kept = q.split('&').filter(p => p && !/^(utm_|mc_|ref=|source=)/i.test(p));
+  return kept.length ? base + '?' + kept.join('&') : base;
 }}
 
 const seen = new Set();
@@ -73,8 +72,7 @@ for (const item of $input.all()) {{
   const t = Date.parse(date);
   if (!isNaN(t) && t < cutoff) continue;
   seen.add(url);
-  let host = '';
-  try {{ host = new URL(url).hostname; }} catch (e) {{}}
+  const host = hostOf(url);
   out.push({{ json: {{
     title: (j.title || '').trim(),
     url,
