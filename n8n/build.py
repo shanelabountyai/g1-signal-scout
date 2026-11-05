@@ -298,8 +298,8 @@ workflow = {
     "nodes": nodes,
     "connections": connections,
     "active": False,
-    # errorWorkflow: WORKFLOW_ID is set at H4 — n8n refuses it until the workflow has a published version.
-    "settings": {"executionOrder": "v1", "timezone": "America/Chicago"},
+    # errorWorkflow = itself (Error Trigger node). Accepted only once the workflow has a published version (H4, 2026-11-05).
+    "settings": {"executionOrder": "v1", "timezone": "America/Chicago", "errorWorkflow": WORKFLOW_ID},
     "pinData": {},
     "meta": {"instanceId": ""},
 }

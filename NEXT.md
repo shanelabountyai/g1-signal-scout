@@ -1,6 +1,6 @@
 # NEXT
 
-State (2026-11-05): **G1·B passes all four acceptance criteria.** Branch `kickoff`, nothing merged to main, schedule off, not deployed.
+State (2026-11-05): **G1·B passes all four acceptance criteria and the schedule is on** (D-18; first automatic run Mon 2026-11-09 06:00 CT). Repo: https://github.com/shanelabountyai/g1-signal-scout (private). Branch `kickoff` pushed; nothing merged to main.
 
 | AC | Result | Evidence |
 |---|---|---|
@@ -13,9 +13,8 @@ Cost: ~$0.03 per run; ~$0.13 spent of the $10 cap (`docs/run-log.md`).
 
 ## Owner's hand steps still open
 
-- **H4 — switch the schedule on** (`n8n/README.md` → Turning the schedule on). Only on the owner's explicit go.
-- **GitHub** — create the private repo and push `main` + `kickoff` (not done without the owner's go).
 - **Merge `kickoff` → `main`** when the owner says so.
+- **Check the first automatic run** after Monday 06:00 CT: a new file in the Drive folder and 3 new `run_log` rows. If the Mac was asleep, run it by hand.
 
 ## Next item
 
