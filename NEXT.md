@@ -1,6 +1,6 @@
 # NEXT
 
-State (2026-11-05): **G1·B passes all four acceptance criteria and the schedule is on** (D-18; first automatic run Mon 2026-11-09 06:00 CT). Repo: https://github.com/shanelabountyai/g1-signal-scout (private). Branch `kickoff` pushed; nothing merged to main.
+State (2026-11-05): **G1·B passes all four acceptance criteria and the schedule is on** (D-18; first automatic run Mon 2026-11-09 06:00 CT). Repo: https://github.com/shanelabountyai/g1-signal-scout (private). `kickoff` merged to `main` 2026-11-05 (owner's go).
 
 | AC | Result | Evidence |
 |---|---|---|
@@ -15,7 +15,6 @@ Cost: ~$0.07 per run with the Writer; ~$0.20 spent of the $10 cap (`docs/run-log
 
 ## Owner's hand steps still open
 
-- **Merge `kickoff` → `main`** when the owner says so.
 - **Check the first automatic run** after Monday 06:00 CT: an email, a new Doc in the Drive folder and 4 new `run_log` rows. If the Mac was asleep, run it by hand.
 - **Voice feedback on the Writer's drafts** (exec 8 Doc). Known tendency: it hedges every draft ("I haven't tested this…"); once per post is honest, three times is timid. Tune `POST_RULES`/`WRITER` in `n8n/prompts.py` from the owner's notes.
 
