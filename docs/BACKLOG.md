@@ -27,7 +27,7 @@ Status: `todo` · `doing` · `done` · `blocked`.
 
 | # | Task | Done when | Status |
 |---|---|---|---|
-| C1 | Project scaffold. Python 3.12, `uv`, Claude Agent SDK, `.env.example` (names only), SQLite `seen_items`, same feeds from `config/feeds.md`. | `uv run scout --dry-run` lists unseen items from the fixtures with no model call. | todo |
+| C1 | Project scaffold. Python 3.12, `uv`, Claude Agent SDK, `.env.example` (names only), SQLite `seen_items`, same feeds from `config/feeds.md`. | `uv run scout --dry-run` lists unseen items from the fixtures with no model call. | done |
 | C2 | Typed hand-offs. Pydantic models `Item`, `SummarizedItem`, `DigestItem`, `Digest`. | Unit test: a fixture item round-trips through all three models. | todo |
 | C3 | Three agents in sequence, same prompts and models as B4–B6, reading the duplication log so the duplication is identical. | Manual run on fixtures produces a 5–8 item digest. | todo |
 | C4 | Drive write then mark seen, error path, same order as B7/B9. | Same tests as B8 and B9 pass against SQLite. (AC 1–3.) | todo |

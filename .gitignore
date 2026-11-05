@@ -3,3 +3,6 @@
 !.env.example
 __pycache__/
 .DS_Store
+data/
+.venv/
+.pytest_cache/
