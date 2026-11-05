@@ -64,3 +64,7 @@ Nothing is marked seen unless the Drive write succeeded (AC 3). A run with no ne
 1. Toggle the workflow **Active** (top right). n8n 2.x publishes a version when you do.
 2. Then set **Settings → Error Workflow** to this workflow itself, so a failure in any node (not only Drive) writes a `run_log` error row. Or set `"errorWorkflow": WORKFLOW_ID` in `build.py`'s settings and push.
 3. The Mac must be awake with `npx n8n` running at Monday 06:00 CT, or the run slips to the next time n8n is up.
+
+## Email delivery
+
+Sent by the **Send email** node (Gmail credential `Gmail account`, signed in as shane@labintelligence.co) to shanelabountyai@gmail.com, after Mark seen. The first send on 2026-11-05 reached the inbox, but late. If a Monday email is missing, check the run first: a `SENT` label in the Send email output means Gmail accepted it, so look for a delay or Spam before debugging the workflow.
