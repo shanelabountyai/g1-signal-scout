@@ -653,7 +653,13 @@
         4860,
         120
       ],
-      "onError": "continueErrorOutput"
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "hsCSUHtGuLaCpnFM",
+          "name": "Gmail account"
+        }
+      }
     },
     {
       "parameters": {},

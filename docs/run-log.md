@@ -16,6 +16,11 @@ Source of truth is the `run_log` Data Table in the owner's n8n (one row per agen
 | 2026-11-05 00:18 | 6 | all three | — | ~30k | ~9k | ~$0.03 | model calls ok; Drive write failed on purpose (bogus folder, AC 3); 0 rows marked seen |
 | 2026-11-05 00:2x | 7 | all three | — | ~30k | ~9k | ~$0.03 | same test with the error path wired: `run_log` error row written, run stopped red, 0 rows marked seen |
 
-**Cost per successful run: ~$0.03.** Running total of the build: **~$0.13** of $10.
+| 2026-11-05 00:4x | 8 | Researcher | claude-haiku-5-5 | 15,056 | 3,060 | $0.0030 | ok, 93 → 20 kept |
+| 2026-11-05 00:4x | 8 | Summarizer | claude-haiku-5-5 | 4,366 | 2,815 | $0.0018 | ok |
+| 2026-11-05 00:4x | 8 | Editor | claude-sonnet-5-5 | 6,329 | 1,270 | $0.0254 | ok, 5 picked |
+| 2026-11-05 00:4x | 8 | Writer | claude-sonnet-5-5 | 3,432 | 3,082 | $0.0377 | ok, 3 drafts (AI Integration, MarTech, Scale); Doc `1M5Xvp8q2xxaDUlSYEQ3y0ltmmR6ZI0f3HbF9UImMH8w`; email sent |
+
+**Cost per run with drafts (D-20): ~$0.07** (~$3.50/year at one run a week). Running total of the build: **~$0.20** of $10.
 
 Shape of a run (2026-11-05): 15 feeds → 2,072 RSS items → 106 from the last 7 days → 29 on-topic → 8 picked. The Editor is 80% of the cost; the two Haiku passes together are under a cent.

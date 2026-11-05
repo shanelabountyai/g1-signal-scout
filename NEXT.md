@@ -9,12 +9,15 @@ State (2026-11-05): **G1·B passes all four acceptance criteria and the schedule
 | 3. Failed Drive write leaves items unmarked | pass | exec 6 and 7 (bogus folder): `seen_items` stayed at 13; exec 7 also wrote a `run_log` error row and stopped red |
 | 4. `docs/duplication-log.md` lists every rule in more than one agent | pass | generated from `n8n/prompts.py` on every build |
 
-Cost: ~$0.03 per run; ~$0.13 spent of the $10 cap (`docs/run-log.md`).
+Cost: ~$0.07 per run with the Writer; ~$0.20 spent of the $10 cap (`docs/run-log.md`).
+
+**Enhancement shipped 2026-11-05 (D-20, D-21):** Writer agent drafts the top 3 picks as LinkedIn posts; digest is a formatted Google Doc; Monday email from shane@labintelligence.co to shanelabountyai@gmail.com. Live-tested in exec 8.
 
 ## Owner's hand steps still open
 
 - **Merge `kickoff` → `main`** when the owner says so.
-- **Check the first automatic run** after Monday 06:00 CT: a new file in the Drive folder and 3 new `run_log` rows. If the Mac was asleep, run it by hand.
+- **Check the first automatic run** after Monday 06:00 CT: an email, a new Doc in the Drive folder and 4 new `run_log` rows. If the Mac was asleep, run it by hand.
+- **Voice feedback on the Writer's drafts** (exec 8 Doc). Known tendency: it hedges every draft ("I haven't tested this…"); once per post is honest, three times is timid. Tune `POST_RULES`/`WRITER` in `n8n/prompts.py` from the owner's notes.
 
 ## Next item
 
