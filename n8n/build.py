@@ -7,6 +7,7 @@ Code nodes is edited as JavaScript, not as escaped JSON strings. Stdlib only.
 Node parameter shapes were read from the installed n8n 2.46.6 package (D-7).
 """
 import json
+import os
 import re
 import sys
 import uuid
@@ -22,6 +23,8 @@ SEEN_TABLE = {"id": "KY3yNvowzRzwrfgH", "name": "seen_items"}  # owner's n8n, cr
 ANTHROPIC_CRED = {"id": "Bdvgd2nJk9NDSzTC", "name": "anthropic"}  # httpHeaderAuth, already in owner's n8n
 DRIVE_CRED = {"id": "wAW20JZRMalAkhpe", "name": "Google Drive account"}  # googleDriveOAuth2Api, already in owner's n8n
 DRIVE_FOLDER_ID = "1SguTmcorJEpl3CftOFwr2FpANyhHQAZh"  # 'Signal Scout' in the owner's My Drive (H0c)
+if os.environ.get("B9_BREAK_DRIVE"):  # error-path test (B9): `B9_BREAK_DRIVE=1 python3 n8n/push.py push`, then push again without it
+    DRIVE_FOLDER_ID = "0000-not-a-real-folder-id"
 RUN_LOG_TABLE = {"id": "bxyWHL7tSS1XL5BE", "name": "run_log"}  # created over the API 2026-11-04
 WORKFLOW_ID = "ZsNMHw5Y1QRjFtrI"  # created by the owner's Import from File on 2026-11-04
 PRICES = {"claude-haiku-5-5": [0.10, 0.50], "claude-sonnet-5-5": [2.0, 10.0]}  # $/MTok in, out (D-8)
@@ -183,11 +186,14 @@ return [{{ json: {{ week, run_at: runAt, file_name: `Signal Scout — week of ${
 
 LOG_USAGE_JS = "return $input.first().json.usages.map(u => ({ json: u }));\n"
 UNPACK_PICKS_JS = "return $('Compose digest').first().json.picks.map(p => ({ json: { ...p, seen_at: $('Compose digest').first().json.run_at } }));\n"
-LOG_ERROR_JS = """// Error Trigger payload -> one run_log row. Nothing is marked seen on this path (AC 3).
+LOG_ERROR_JS = """// One run_log row per failure. Reached from Write digest's error output (Drive failed) or from the
+// Error Trigger (any other node failed, once errorWorkflow is set at H4). Nothing is marked seen on this path (AC 3).
 const e = $input.first().json;
-const err = (e.execution && e.execution.error) || {};
+const fromDrive = e.error !== undefined;
+const err = fromDrive ? e.error : ((e.execution && e.execution.error) || {});
+const where = fromDrive ? 'Write digest' : ((e.execution && e.execution.lastNodeExecuted) || '?');
 return [{ json: { run_at: new Date().toISOString(), agent: 'workflow', model: '', input_tokens: 0, output_tokens: 0, cost_usd: 0,
-  status: 'error', note: ((e.execution && e.execution.lastNodeExecuted) || '?') + ': ' + String(err.message || err).slice(0, 400) } }];
+  status: 'error', note: where + ': ' + String((err && err.message) || err).slice(0, 400) } }];
 """
 
 
@@ -252,13 +258,15 @@ nodes = [
         "driveId": {"__rl": True, "mode": "list", "value": "My Drive"},
         "folderId": {"__rl": True, "mode": "id", "value": DRIVE_FOLDER_ID},
         "options": {},
-    }, 3540, 120, executeOnce=True, credentials={"googleDriveOAuth2Api": DRIVE_CRED}),
+    }, 3540, 120, executeOnce=True, onError="continueErrorOutput", credentials={"googleDriveOAuth2Api": DRIVE_CRED}),
     node("Unpack picks", "n8n-nodes-base.code", 2, {"jsCode": UNPACK_PICKS_JS}, 3760, 120),
     table_insert("Mark seen", SEEN_TABLE, ["url", "title", "source", "seen_at"], 3980, 120),
 
     node("Error Trigger", "n8n-nodes-base.errorTrigger", 1, {}, 0, 480),
     node("Log error", "n8n-nodes-base.code", 2, {"jsCode": LOG_ERROR_JS}, 220, 480),
     table_insert("Run log (error)", RUN_LOG_TABLE, RUN_LOG_COLUMNS, 440, 480),
+    node("Stop: run failed", "n8n-nodes-base.stopAndError", 1, {
+        "errorMessage": "={{ $('Log error').first().json.note }}"}, 660, 480),  # logged first, then the run goes red
 ]
 
 
@@ -280,8 +288,10 @@ for a, b in [("Drop seen", "Pack items"), ("Pack items", "Researcher"), ("Resear
              ("After Researcher", "Summarizer"), ("Summarizer", "After Summarizer"), ("After Summarizer", "Editor"),
              ("Editor", "Compose digest"), ("Compose digest", "Log usage"), ("Log usage", "Run log"), ("Run log", "Write digest"),
              ("Write digest", "Unpack picks"), ("Unpack picks", "Mark seen"),
-             ("Error Trigger", "Log error"), ("Log error", "Run log (error)")]:
+             ("Error Trigger", "Log error"), ("Log error", "Run log (error)"), ("Run log (error)", "Stop: run failed")]:
     main_connect(a, b)
+# Write digest error output (index 1) -> Log error
+connections["Write digest"]["main"].append([{"node": "Log error", "type": "main", "index": 0}])
 
 workflow = {
     "name": "G1 Weekly Signal Scout",

@@ -478,6 +478,7 @@
         120
       ],
       "executeOnce": true,
+      "onError": "continueErrorOutput",
       "credentials": {
         "googleDriveOAuth2Api": {
           "id": "wAW20JZRMalAkhpe",
@@ -584,7 +585,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Error Trigger payload -> one run_log row. Nothing is marked seen on this path (AC 3).\nconst e = $input.first().json;\nconst err = (e.execution && e.execution.error) || {};\nreturn [{ json: { run_at: new Date().toISOString(), agent: 'workflow', model: '', input_tokens: 0, output_tokens: 0, cost_usd: 0,\n  status: 'error', note: ((e.execution && e.execution.lastNodeExecuted) || '?') + ': ' + String(err.message || err).slice(0, 400) } }];\n"
+        "jsCode": "// One run_log row per failure. Reached from Write digest's error output (Drive failed) or from the\n// Error Trigger (any other node failed, once errorWorkflow is set at H4). Nothing is marked seen on this path (AC 3).\nconst e = $input.first().json;\nconst fromDrive = e.error !== undefined;\nconst err = fromDrive ? e.error : ((e.execution && e.execution.error) || {});\nconst where = fromDrive ? 'Write digest' : ((e.execution && e.execution.lastNodeExecuted) || '?');\nreturn [{ json: { run_at: new Date().toISOString(), agent: 'workflow', model: '', input_tokens: 0, output_tokens: 0, cost_usd: 0,\n  status: 'error', note: where + ': ' + String((err && err.message) || err).slice(0, 400) } }];\n"
       },
       "id": "59cc7255-f183-5cb9-9f86-b97fa27036fc",
       "name": "Log error",
@@ -709,6 +710,19 @@
       "typeVersion": 1.1,
       "position": [
         440,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "errorMessage": "={{ $('Log error').first().json.note }}"
+      },
+      "id": "3d4c1a7c-0dfd-5173-a7e1-0889d80cdf13",
+      "name": "Stop: run failed",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        660,
         480
       ]
     }
@@ -931,6 +945,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "Log error",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -961,6 +982,17 @@
         [
           {
             "node": "Run log (error)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run log (error)": {
+      "main": [
+        [
+          {
+            "node": "Stop: run failed",
             "type": "main",
             "index": 0
           }
