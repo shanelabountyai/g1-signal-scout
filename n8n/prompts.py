@@ -133,11 +133,88 @@ EDITOR = {
     },
 }
 
-AGENTS = [RESEARCHER, SUMMARIZER, EDITOR]
+SHANE_RECORD = (
+    "SHANE'S VERIFIED RECORD. The only career facts and numbers a draft may use. Never round up, combine, or reword "
+    "them into something bigger, and never add one that is not here. "
+    "Now: Principal at Lab Intelligence, independent marketing-ops and martech advisory; builds agentic systems in "
+    "Claude Code and sample business builds on synthetic data. No client engagements: never imply clients, client "
+    "results, audits for companies, or frameworks he sells. "
+    "2024-2026: Director, Marketing Operations & Activation at a global professional association. NEVER name this "
+    "employer; always 'a global professional association'. Never name or target its competitors in certification "
+    "or professional associations. There: 24-month digital transformation (website rebuild on schedule with a "
+    "72-person blended team, mobile app under budget, event-tech transformation); founded the Marketing PMO, Creative "
+    "Ops and Event Ops functions, 35 FTE and up to 75 with agencies; 230+ requirement event-tech RFP that retired "
+    "three legacy systems; Frontify adoption at 424% of prior usage against a 200% target; Monday.com intake cut from "
+    "12 steps to 1; co-led the AI Community of Practice and piloted Microsoft Copilot. "
+    "2020-2024 Lumen Technologies (Senior Director, Creative Operations): consolidated tracking and reporting of the "
+    "$100M+ marketing budget from 26 marketers to 3 (tracking and reporting, never 'decision-making'); $10M agency "
+    "cost savings via a capacity management engine; 400% efficiency increase; 50% cost reduction; 1,000+ projects a "
+    "year with 28% year-over-year output growth; led the global PMO for the CenturyLink to Lumen rebrand, including "
+    "a $22M paid-media launch; Adobe Workfront: 15 tools consolidated for 150+ marketers, utilization up 25%; Knak "
+    "saved 10,000 creative hours a year; annual planning reached 80% planned vs unplanned work; ran one of the five "
+    "largest Marketo instances; one of 15 customers on Adobe's Content Supply Chain Advisory Board. "
+    "2005-2018 Level 3: unified 7 data sources into one marketing performance dashboard; owned the Eloqua-to-"
+    "Salesforce lead funnel. Certifications: Adobe Workfront Admin, PMP, CPMAI. "
+    "Never write: '20+ years' or any tenure claim; owning enterprise AI strategy or AI governance policy; board "
+    "reporting; managing Director-level reports; leading a 150-person org redesign; hand-written SQL."
+)
+
+POST_RULES = (
+    "POST FORMAT. Four pillars: Scale (what changes at 1,000+ projects and $100M budgets), Impact (proving real "
+    "business outcomes), AI Integration (AI from a practitioner's chair, always riding on a Scale, Impact or MarTech "
+    "story), MarTech (choosing, consolidating and integrating the stack). Structure: experience first, experiment "
+    "second: what Shane ran, what the item shows, his honest take including what breaks. Hook in lines 1-2 drops "
+    "into a story, a surprising statement or a sharp question; never 'I'm excited', 'I've been thinking a lot about', "
+    "'Humbled'. Body 3-6 short paragraphs of 1-3 sentences, blank line between each. End with a genuine question "
+    "to peers or an honest reflection; a soft 'happy to compare notes' is fine, no pitch, never name Lab "
+    "Intelligence as a call to action, never signal a job search. 150-300 words. 3-5 lowercase hashtags only on the "
+    "last line. Cite the item's source by name in the body; never put the URL in the post. If the item does not "
+    "support Shane's take, the draft says less, not more."
+)
+
+WRITER = {
+    "name": "Writer",
+    "model": "claude-sonnet-5-5",
+    "effort": "medium",
+    "max_tokens": 12000,
+    "rules": ["topic_brief", "claim_rule", "brand_voice", "run_logging"],
+    "extra": [SHANE_RECORD, POST_RULES],
+    "system": (
+        "You are the Writer in a weekly signal scout. You receive the Editor's picks for the week (id, title, source, "
+        "summary, tag, post_angle). Choose the 3 that make the strongest LinkedIn posts for Shane, meaning each can "
+        "be anchored to a real fact in his verified record, and draft one post for each. The 3 drafts must use 3 "
+        "different pillars when the picks allow it, and never the same pillar twice in a row. For each draft give "
+        "the pillar, the record fact it is anchored to (quoted from the record), and the post text. If fewer than 3 "
+        "picks can be anchored honestly, draft fewer."
+    ),
+    "schema": {
+        "type": "object",
+        "properties": {
+            "drafts": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"type": "integer"},
+                        "pillar": {"type": "string", "enum": ["Scale", "Impact", "AI Integration", "MarTech"]},
+                        "anchor": {"type": "string"},
+                        "post": {"type": "string"},
+                    },
+                    "required": ["id", "pillar", "anchor", "post"],
+                    "additionalProperties": False,
+                },
+            }
+        },
+        "required": ["drafts"],
+        "additionalProperties": False,
+    },
+}
+
+AGENTS = [RESEARCHER, SUMMARIZER, EDITOR, WRITER]
 
 
 def system_prompt(agent: dict) -> str:
-    return agent["system"] + "\n\n" + "\n\n".join(SHARED[r] for r in agent["rules"])
+    return agent["system"] + "\n\n" + "\n\n".join([SHARED[r] for r in agent["rules"]] + agent.get("extra", []))
 
 
 def request_body(agent: dict, user_content_js: str) -> str:

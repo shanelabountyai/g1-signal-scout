@@ -310,14 +310,64 @@
     },
     {
       "parameters": {
-        "jsCode": "// Structured outputs: first content block is text holding valid JSON.\nfunction parsed(resp) {\n  const block = (resp.content || []).find(b => b.type === 'text');\n  if (!block) throw new Error('No text block in model response: stop_reason=' + resp.stop_reason);\n  return JSON.parse(block.text);\n}\nfunction byId(items) { const m = new Map(); for (const i of items) m.set(i.id, i); return m; }\n\n// Deterministic digest: every link and fact comes from the item record, the model only adds angle, why, intro.\nconst PRICES = {\"claude-haiku-5-5\": [0.1, 0.5], \"claude-sonnet-5-5\": [2.0, 10.0]};\nconst summarized = byId(JSON.parse($('After Summarizer').first().json.body.messages[0].content.replace(/^[^\\n]*\\n/, '')));\nconst out = parsed($input.first().json);\nconst picks = [];\nfor (const p of out.picks || []) { const rec = summarized.get(p.id); if (rec) picks.push({ ...rec, post_angle: p.post_angle, why: p.why }); }\nif (!picks.length) throw new Error('Editor picked 0 known items');\n\nconst now = new Date();\nconst monday = new Date(now); monday.setUTCDate(now.getUTCDate() - ((now.getUTCDay() + 6) % 7));\nconst week = monday.toISOString().slice(0, 10);\nconst runAt = now.toISOString();\n\nconst usages = [\n  ['Researcher', $('Researcher').first().json],\n  ['Summarizer', $('Summarizer').first().json],\n  ['Editor', $input.first().json],\n].map(([agent, r]) => {\n  const u = r.usage || {}; const [pin, pout] = PRICES[r.model] || [0, 0];\n  const cost = (u.input_tokens || 0) * pin / 1e6 + (u.output_tokens || 0) * pout / 1e6;\n  return { run_at: runAt, agent, model: r.model, input_tokens: u.input_tokens || 0, output_tokens: u.output_tokens || 0, cost_usd: Math.round(cost * 1e6) / 1e6, status: 'ok', note: 'stop=' + r.stop_reason };\n});\nconst total = usages.reduce((a, u) => a + u.cost_usd, 0);\nconst counts = { fresh: $('Pack items').first().json.count, kept: $('After Researcher').first().json.kept, summarized: $('After Summarizer').first().json.summarized, picked: picks.length };\n\nconst lines = [`# Signal Scout — week of ${week}`, '',\n  `_Run ${runAt} · ${counts.fresh} new items from ${$('Feed list').all().length || 'the'} feeds · ${counts.kept} passed the Researcher · ${counts.picked} picked._`, '',\n  out.intro || '', ''];\npicks.forEach((p, i) => {\n  lines.push(`## ${i + 1}. ${p.title}`, `**${p.source}** · ${(p.date || '').slice(0, 10)} · ${p.url}`, '', p.summary, '',\n    `Tag: ${p.tag}`, '', `**Post angle:** ${p.post_angle}`, '', `_Why: ${p.why}_`, '');\n});\nlines.push('---', `Cost this run: ${usages.map(u => `${u.agent} ${u.model} ${u.input_tokens}→${u.output_tokens} tok $${u.cost_usd.toFixed(4)}`).join(' · ')} · total $${total.toFixed(4)}`, '');\n\nreturn [{ json: { week, run_at: runAt, file_name: `Signal Scout — week of ${week}.md`, digest_md: lines.join('\\n'), picks: picks.map(p => ({ url: p.url, title: p.title, source: p.source })), usages, counts, total_cost_usd: total } }];\n"
+        "jsCode": "// Structured outputs: first content block is text holding valid JSON.\nfunction parsed(resp) {\n  const block = (resp.content || []).find(b => b.type === 'text');\n  if (!block) throw new Error('No text block in model response: stop_reason=' + resp.stop_reason);\n  return JSON.parse(block.text);\n}\nfunction byId(items) { const m = new Map(); for (const i of items) m.set(i.id, i); return m; }\n\n// Join the Editor's picks to the records, then ask the Writer for up to 3 full drafts.\nconst summarized = byId(JSON.parse($('After Summarizer').first().json.body.messages[0].content.replace(/^[^\\n]*\\n/, '')));\nconst out = parsed($input.first().json);\nconst picks = [];\nfor (const p of out.picks || []) { const rec = summarized.get(p.id); if (rec) picks.push({ ...rec, post_angle: p.post_angle, why: p.why }); }\nif (!picks.length) throw new Error('Editor picked 0 known items');\nconst forWriter = picks.map(({ id, title, source, summary, tag, post_angle }) => ({ id, title, source, summary, tag, post_angle }));\nconst user = 'This week\\'s picks as JSON:\\n' + JSON.stringify(forWriter);\nreturn [{ json: { intro: out.intro || '', picks, body: { model: \"claude-sonnet-5-5\", max_tokens: 12000, system: \"You are the Writer in a weekly signal scout. You receive the Editor's picks for the week (id, title, source, summary, tag, post_angle). Choose the 3 that make the strongest LinkedIn posts for Shane, meaning each can be anchored to a real fact in his verified record, and draft one post for each. The 3 drafts must use 3 different pillars when the picks allow it, and never the same pillar twice in a row. For each draft give the pillar, the record fact it is anchored to (quoted from the record), and the post text. If fewer than 3 picks can be anchored honestly, draft fewer.\\n\\nTOPIC BRIEF. This scout watches two things only: (1) AI adoption in marketing operations: how marketing and ops teams actually put AI to work in planning, intake, content production, campaign execution, martech stacks, reporting, and the operating model around them; (2) agent readiness: what it takes for a company, its data, its systems, its content and its commerce surfaces to be used by AI agents (protocols like MCP, agentic commerce and payments, agent-accessible catalogs and APIs, governance of agents at work). Pure model research, consumer gadgets, funding news, and generic productivity tips are off-topic unless an item ties them to one of the two.\\n\\nCLAIM RULE. Never state a fact that is not in the item you were given. Never invent a number, a quote, a company action or a date. Never alter a URL: return URLs exactly as received, and only URLs that were in your input. If an item's excerpt is too thin to support a statement, say less, not more.\\n\\nBRAND VOICE (for post angles). The reader is Shane LaBounty: a senior marketing-operations leader who ran $100M+ marketing budgets, 1,000+ projects a year and a 150-marketer martech stack, and now tests AI against that world and reports what held and what broke. Experience first, experiment second. Specific over general: one real number or moment beats polished generalities. Warm, direct, first person, contractions fine. Never hype, never beginner voice ('I'm learning AI'), never a pitch. Never use: 'excited to share', 'humbled', 'game-changer', 'hope this finds you well', 'pick your brain', 'synergy', 'circle back', emoji. A post angle is one sentence, at most 25 words, that a CMO who has never met Shane would read and think 'that person has done the work'. It must be defensible from the item alone.\\n\\nRUN LOGGING. Every call you make is logged with model, input tokens, output tokens and cost, and the run is capped. Return only the JSON asked for: no preamble, no commentary, no markdown fences, nothing padded.\\n\\nSHANE'S VERIFIED RECORD. The only career facts and numbers a draft may use. Never round up, combine, or reword them into something bigger, and never add one that is not here. Now: Principal at Lab Intelligence, independent marketing-ops and martech advisory; builds agentic systems in Claude Code and sample business builds on synthetic data. No client engagements: never imply clients, client results, audits for companies, or frameworks he sells. 2024-2026: Director, Marketing Operations & Activation at a global professional association. NEVER name this employer; always 'a global professional association'. Never name or target its competitors in certification or professional associations. There: 24-month digital transformation (website rebuild on schedule with a 72-person blended team, mobile app under budget, event-tech transformation); founded the Marketing PMO, Creative Ops and Event Ops functions, 35 FTE and up to 75 with agencies; 230+ requirement event-tech RFP that retired three legacy systems; Frontify adoption at 424% of prior usage against a 200% target; Monday.com intake cut from 12 steps to 1; co-led the AI Community of Practice and piloted Microsoft Copilot. 2020-2024 Lumen Technologies (Senior Director, Creative Operations): consolidated tracking and reporting of the $100M+ marketing budget from 26 marketers to 3 (tracking and reporting, never 'decision-making'); $10M agency cost savings via a capacity management engine; 400% efficiency increase; 50% cost reduction; 1,000+ projects a year with 28% year-over-year output growth; led the global PMO for the CenturyLink to Lumen rebrand, including a $22M paid-media launch; Adobe Workfront: 15 tools consolidated for 150+ marketers, utilization up 25%; Knak saved 10,000 creative hours a year; annual planning reached 80% planned vs unplanned work; ran one of the five largest Marketo instances; one of 15 customers on Adobe's Content Supply Chain Advisory Board. 2005-2018 Level 3: unified 7 data sources into one marketing performance dashboard; owned the Eloqua-to-Salesforce lead funnel. Certifications: Adobe Workfront Admin, PMP, CPMAI. Never write: '20+ years' or any tenure claim; owning enterprise AI strategy or AI governance policy; board reporting; managing Director-level reports; leading a 150-person org redesign; hand-written SQL.\\n\\nPOST FORMAT. Four pillars: Scale (what changes at 1,000+ projects and $100M budgets), Impact (proving real business outcomes), AI Integration (AI from a practitioner's chair, always riding on a Scale, Impact or MarTech story), MarTech (choosing, consolidating and integrating the stack). Structure: experience first, experiment second: what Shane ran, what the item shows, his honest take including what breaks. Hook in lines 1-2 drops into a story, a surprising statement or a sharp question; never 'I'm excited', 'I've been thinking a lot about', 'Humbled'. Body 3-6 short paragraphs of 1-3 sentences, blank line between each. End with a genuine question to peers or an honest reflection; a soft 'happy to compare notes' is fine, no pitch, never name Lab Intelligence as a call to action, never signal a job search. 150-300 words. 3-5 lowercase hashtags only on the last line. Cite the item's source by name in the body; never put the URL in the post. If the item does not support Shane's take, the draft says less, not more.\", output_config: { effort: \"medium\", format: { type: 'json_schema', schema: {\"type\": \"object\", \"properties\": {\"drafts\": {\"type\": \"array\", \"items\": {\"type\": \"object\", \"properties\": {\"id\": {\"type\": \"integer\"}, \"pillar\": {\"type\": \"string\", \"enum\": [\"Scale\", \"Impact\", \"AI Integration\", \"MarTech\"]}, \"anchor\": {\"type\": \"string\"}, \"post\": {\"type\": \"string\"}}, \"required\": [\"id\", \"pillar\", \"anchor\", \"post\"], \"additionalProperties\": false}}}, \"required\": [\"drafts\"], \"additionalProperties\": false} } }, messages: [{ role: 'user', content: user }] } } }];\n"
+      },
+      "id": "883e81c2-a69c-51f3-ae98-a9acb203bd06",
+      "name": "After Editor",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "e1e03ffa-f20f-59bd-92f7-93ea05ad661c",
+      "name": "Writer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3100,
+        120
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Bdvgd2nJk9NDSzTC",
+          "name": "anthropic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Structured outputs: first content block is text holding valid JSON.\nfunction parsed(resp) {\n  const block = (resp.content || []).find(b => b.type === 'text');\n  if (!block) throw new Error('No text block in model response: stop_reason=' + resp.stop_reason);\n  return JSON.parse(block.text);\n}\nfunction byId(items) { const m = new Map(); for (const i of items) m.set(i.id, i); return m; }\n\n// Deterministic digest: links and facts come from the item records; models add intro, angles and drafts.\nconst PRICES = {\"claude-haiku-5-5\": [0.1, 0.5], \"claude-sonnet-5-5\": [2.0, 10.0]};\nconst ed = $('After Editor').first().json;\nconst picks = ed.picks;\nconst byPick = byId(picks);\nconst drafts = [];\nfor (const d of (parsed($input.first().json).drafts || [])) { const rec = byPick.get(d.id); if (rec && d.post) drafts.push({ ...d, rec }); }\n\nconst now = new Date();\nconst monday = new Date(now); monday.setUTCDate(now.getUTCDate() - ((now.getUTCDay() + 6) % 7));\nconst week = monday.toISOString().slice(0, 10);\nconst runAt = now.toISOString();\n\nconst usages = [\n  ['Researcher', $('Researcher').first().json],\n  ['Summarizer', $('Summarizer').first().json],\n  ['Editor', $('Editor').first().json],\n  ['Writer', $input.first().json],\n].map(([agent, r]) => {\n  const u = r.usage || {}; const [pin, pout] = PRICES[r.model] || [0, 0];\n  const cost = (u.input_tokens || 0) * pin / 1e6 + (u.output_tokens || 0) * pout / 1e6;\n  return { run_at: runAt, agent, model: r.model, input_tokens: u.input_tokens || 0, output_tokens: u.output_tokens || 0, cost_usd: Math.round(cost * 1e6) / 1e6, status: 'ok', note: 'stop=' + r.stop_reason };\n});\nconst total = usages.reduce((a, u) => a + u.cost_usd, 0);\nconst counts = { fresh: $('Pack items').first().json.count, kept: $('After Researcher').first().json.kept, summarized: $('After Summarizer').first().json.summarized, picked: picks.length, drafted: drafts.length };\n\nconst esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');\nconst paras = t => String(t || '').split(/\\n\\s*\\n/).map(p => '<p>' + esc(p.trim()).replace(/\\n/g, '<br>') + '</p>').join('');\nconst hook = t => String(t || '').split('\\n').find(l => l.trim()) || '';\nconst draftedIds = new Set(drafts.map(d => d.id));\n\nlet doc = `<html><head><meta charset=\"utf-8\"></head><body>`;\ndoc += `<h1>Signal Scout — week of ${week}</h1>`;\ndoc += `<p><i>${counts.fresh} new items from ${$('Feed list').all().length} feeds · ${counts.kept} on topic · ${counts.picked} picked · ${counts.drafted} drafted · cost $${total.toFixed(3)}</i></p>`;\ndoc += paras(ed.intro);\ndoc += `<h2>Post drafts</h2>`;\nif (!drafts.length) doc += `<p>No pick this week could be anchored honestly to your record, so no drafts. The picks are below.</p>`;\ndrafts.forEach((d, i) => {\n  doc += `<h3>Draft ${i + 1} · ${esc(d.pillar)}</h3>`;\n  doc += `<p><b>From:</b> <a href=\"${esc(d.rec.url)}\">${esc(d.rec.title)}</a> (${esc(d.rec.source)})<br><b>Anchored to:</b> ${esc(d.anchor)}</p>`;\n  doc += paras(d.post) + `<p><i>Read it out loud before it ships.</i></p><hr>`;\n});\ndoc += `<h2>All picks this week</h2>`;\npicks.forEach((p, i) => {\n  doc += `<h3>${i + 1}. <a href=\"${esc(p.url)}\">${esc(p.title)}</a>${draftedIds.has(p.id) ? ' (drafted)' : ''}</h3>`;\n  doc += `<p><b>${esc(p.source)}</b> · ${esc((p.date || '').slice(0, 10))} · ${esc(p.tag)}</p><p>${esc(p.summary)}</p>`;\n  doc += `<p><b>Angle:</b> ${esc(p.post_angle)}<br><i>Why: ${esc(p.why)}</i></p>`;\n});\ndoc += `<hr><p><small>Run ${runAt} · ${usages.map(u => `${u.agent} ${u.model} ${u.input_tokens}→${u.output_tokens} tok $${u.cost_usd.toFixed(4)}`).join(' · ')}</small></p></body></html>`;\n\nconst fileName = `Signal Scout — week of ${week}`;\nconst B = 'g1scout' + now.getTime();\nconst uploadBody = `--${B}\\r\\nContent-Type: application/json; charset=UTF-8\\r\\n\\r\\n` +\n  JSON.stringify({ name: fileName, mimeType: 'application/vnd.google-apps.document', parents: [\"1SguTmcorJEpl3CftOFwr2FpANyhHQAZh\"] }) +\n  `\\r\\n--${B}\\r\\nContent-Type: text/html; charset=UTF-8\\r\\n\\r\\n` + doc + `\\r\\n--${B}--`;\n\nconst subject = `Signal Scout: ${drafts.length} post draft${drafts.length === 1 ? '' : 's'}, week of ${week}`;\n\nreturn [{ json: { week, run_at: runAt, file_name: fileName, upload_body: uploadBody, boundary: B, subject,\n  drafts_preview: drafts.map(d => ({ pillar: d.pillar, hook: hook(d.post), title: d.rec.title })), intro: ed.intro,\n  picks: picks.map(p => ({ url: p.url, title: p.title, source: p.source })), usages, counts, total_cost_usd: total } }];\n"
       },
       "id": "43b13b70-aabc-56ce-ab27-0f8295a40f28",
       "name": "Compose digest",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2880,
+        3320,
         120
       ]
     },
@@ -330,7 +380,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3100,
+        3540,
         120
       ]
     },
@@ -447,34 +497,30 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        3320,
+        3760,
         120
       ]
     },
     {
       "parameters": {
-        "resource": "file",
-        "operation": "createFromText",
-        "content": "={{ $('Compose digest').first().json.digest_md }}",
-        "name": "={{ $('Compose digest').first().json.file_name }}",
-        "driveId": {
-          "__rl": true,
-          "mode": "list",
-          "value": "My Drive"
-        },
-        "folderId": {
-          "__rl": true,
-          "mode": "id",
-          "value": "1SguTmcorJEpl3CftOFwr2FpANyhHQAZh"
-        },
-        "options": {}
+        "method": "POST",
+        "url": "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "=multipart/related; boundary={{ $('Compose digest').first().json.boundary }}",
+        "body": "={{ $('Compose digest').first().json.upload_body }}",
+        "options": {
+          "timeout": 120000
+        }
       },
       "id": "c2c05e63-876a-5e44-95ed-5c573d3ccb77",
       "name": "Write digest",
-      "type": "n8n-nodes-base.googleDrive",
-      "typeVersion": 3,
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
       "position": [
-        3540,
+        3980,
         120
       ],
       "executeOnce": true,
@@ -495,7 +541,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3760,
+        4200,
         120
       ]
     },
@@ -568,9 +614,46 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        3980,
+        4420,
         120
       ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Short Monday email: the thread, the draft hooks, a link to the Doc.\nconst c = $('Compose digest').first().json;\nconst docUrl = 'https://docs.google.com/document/d/' + $('Write digest').first().json.id + '/edit';\nconst esc = s => String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nlet h = '<div style=\"font-family:-apple-system,Segoe UI,Arial,sans-serif;font-size:15px;line-height:1.5;max-width:600px\">';\nh += '<p>' + esc(c.intro) + '</p>';\nif (c.drafts_preview.length) {\n  h += '<ol>' + c.drafts_preview.map(d => '<li><b>' + esc(d.hook) + '</b><br><span style=\"color:#666\">' + esc(d.pillar) + ' · from ' + esc(d.title) + '</span></li>').join('') + '</ol>';\n} else {\n  h += '<p>No drafts this week: nothing could be anchored honestly to your record. The picks are in the doc.</p>';\n}\nh += '<p><a href=\"' + docUrl + '\" style=\"font-weight:600\">Read the drafts and all ' + c.counts.picked + ' picks →</a></p>';\nh += '<p style=\"color:#888;font-size:12px\">' + c.counts.fresh + ' new items, ' + c.counts.kept + ' on topic, cost $' + c.total_cost_usd.toFixed(3) + '</p></div>';\nreturn [{ json: { subject: c.subject, html: h, doc_url: docUrl } }];\n"
+      },
+      "id": "d48f620d-4563-5c91-a266-e87a30f36657",
+      "name": "Email body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4640,
+        120
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "shanelabountyai@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "Signal Scout"
+        }
+      },
+      "id": "1eeba188-db22-549a-b848-751743574667",
+      "name": "Send email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        4860,
+        120
+      ],
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {},
@@ -585,7 +668,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// One run_log row per failure. Reached from Write digest's error output (Drive failed) or from the\n// Error Trigger (any other node failed, once errorWorkflow is set at H4). Nothing is marked seen on this path (AC 3).\nconst e = $input.first().json;\nconst fromDrive = e.error !== undefined;\nconst err = fromDrive ? e.error : ((e.execution && e.execution.error) || {});\nconst where = fromDrive ? 'Write digest' : ((e.execution && e.execution.lastNodeExecuted) || '?');\nreturn [{ json: { run_at: new Date().toISOString(), agent: 'workflow', model: '', input_tokens: 0, output_tokens: 0, cost_usd: 0,\n  status: 'error', note: where + ': ' + String((err && err.message) || err).slice(0, 400) } }];\n"
+        "jsCode": "// One run_log row per failure. Reached from an error output (Write digest or Send email) or from the\n// Error Trigger (any other node). A Drive failure happens before Mark seen, so nothing is marked seen (AC 3).\nconst e = $input.first().json;\nconst fromNode = e.error !== undefined;\nconst err = fromNode ? e.error : ((e.execution && e.execution.error) || {});\nlet where = (e.execution && e.execution.lastNodeExecuted) || '?';\nif (fromNode) { where = 'Write digest'; try { if ($('Email body').isExecuted) where = 'Send email'; } catch (x) {} }\nreturn [{ json: { run_at: new Date().toISOString(), agent: 'workflow', model: '', input_tokens: 0, output_tokens: 0, cost_usd: 0,\n  status: 'error', note: where + ': ' + String((err && err.message) || err).slice(0, 400) } }];\n"
       },
       "id": "59cc7255-f183-5cb9-9f86-b97fa27036fc",
       "name": "Log error",
@@ -897,6 +980,28 @@
       "main": [
         [
           {
+            "node": "After Editor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "After Editor": {
+      "main": [
+        [
+          {
+            "node": "Writer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Writer": {
+      "main": [
+        [
+          {
             "node": "Compose digest",
             "type": "main",
             "index": 0
@@ -966,6 +1071,28 @@
         ]
       ]
     },
+    "Mark seen": {
+      "main": [
+        [
+          {
+            "node": "Email body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email body": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Error Trigger": {
       "main": [
         [
@@ -993,6 +1120,18 @@
         [
           {
             "node": "Stop: run failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send email": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Log error",
             "type": "main",
             "index": 0
           }
