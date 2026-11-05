@@ -157,6 +157,560 @@
         1340,
         120
       ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// All unseen items -> one request to the Researcher. No items -> stop quietly (nothing to digest).\nconst items = $input.all().map(i => i.json);\nif (!items.length) return [];\nconst user = 'Week items as JSON:\\n' + JSON.stringify(items);\nreturn [{ json: { count: items.length, body: { model: \"claude-haiku-5-5\", max_tokens: 8000, system: \"You are the Researcher in a weekly three-agent signal scout. You receive the new feed items of the week (title, url, source, date, excerpt) that have not been seen before. Your only job is a relevance screen: mark each item keep=true if it plausibly belongs to the topic brief, keep=false otherwise, with a reason of at most 12 words. Keep borderline items; the Editor cuts later. Return every input url exactly once.\\n\\nTOPIC BRIEF. This scout watches two things only: (1) AI adoption in marketing operations: how marketing and ops teams actually put AI to work in planning, intake, content production, campaign execution, martech stacks, reporting, and the operating model around them; (2) agent readiness: what it takes for a company, its data, its systems, its content and its commerce surfaces to be used by AI agents (protocols like MCP, agentic commerce and payments, agent-accessible catalogs and APIs, governance of agents at work). Pure model research, consumer gadgets, funding news, and generic productivity tips are off-topic unless an item ties them to one of the two.\\n\\nCLAIM RULE. Never state a fact that is not in the item you were given. Never invent a number, a quote, a company action or a date. Never alter a URL: return URLs exactly as received, and only URLs that were in your input. If an item's excerpt is too thin to support a statement, say less, not more.\\n\\nRUN LOGGING. Every call you make is logged with model, input tokens, output tokens and cost, and the run is capped. Return only the JSON asked for: no preamble, no commentary, no markdown fences, nothing padded.\", output_config: { effort: \"low\", format: { type: 'json_schema', schema: {\"type\": \"object\", \"properties\": {\"items\": {\"type\": \"array\", \"items\": {\"type\": \"object\", \"properties\": {\"url\": {\"type\": \"string\"}, \"keep\": {\"type\": \"boolean\"}, \"reason\": {\"type\": \"string\"}}, \"required\": [\"url\", \"keep\", \"reason\"], \"additionalProperties\": false}}}, \"required\": [\"items\"], \"additionalProperties\": false} } }, messages: [{ role: 'user', content: user }] } } }];\n"
+      },
+      "id": "50c46972-5ab9-5303-8d7b-1342ad9d773d",
+      "name": "Pack items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1560,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "6d389ba9-91a7-547c-8f5a-b4717e52ac80",
+      "name": "Researcher",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1780,
+        120
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Bdvgd2nJk9NDSzTC",
+          "name": "anthropic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Structured outputs: first content block is text holding valid JSON.\nfunction parsed(resp) {\n  const block = (resp.content || []).find(b => b.type === 'text');\n  if (!block) throw new Error('No text block in model response: stop_reason=' + resp.stop_reason);\n  return JSON.parse(block.text);\n}\nfunction byUrl(items) { const m = new Map(); for (const i of items) m.set(i.url, i); return m; }\n\n// Join the Researcher's verdicts back onto the original records: the model never rewrites an item.\nconst input = byUrl(JSON.parse($('Pack items').first().json.body.messages[0].content.replace(/^[^\\n]*\\n/, '')));\nconst out = parsed($input.first().json);\nconst kept = [];\nfor (const v of out.items || []) if (v.keep && input.has(v.url)) kept.push(input.get(v.url));\nif (!kept.length) throw new Error('Researcher kept 0 of ' + input.size + ' items');\nconst user = 'Items as JSON:\\n' + JSON.stringify(kept);\nreturn [{ json: { kept: kept.length, body: { model: \"claude-haiku-5-5\", max_tokens: 8000, system: \"You are the Summarizer in a weekly three-agent signal scout. For each item (title, url, source, date, excerpt) write a two-sentence summary of what the item says, using only what the item contains, and give it exactly one tag: 'marketing-ops-ai' (AI adoption in marketing operations), 'agent-readiness' (what it takes to be used by agents: protocols, agentic commerce, agent governance), or 'other'. Return every input url exactly once.\\n\\nTOPIC BRIEF. This scout watches two things only: (1) AI adoption in marketing operations: how marketing and ops teams actually put AI to work in planning, intake, content production, campaign execution, martech stacks, reporting, and the operating model around them; (2) agent readiness: what it takes for a company, its data, its systems, its content and its commerce surfaces to be used by AI agents (protocols like MCP, agentic commerce and payments, agent-accessible catalogs and APIs, governance of agents at work). Pure model research, consumer gadgets, funding news, and generic productivity tips are off-topic unless an item ties them to one of the two.\\n\\nCLAIM RULE. Never state a fact that is not in the item you were given. Never invent a number, a quote, a company action or a date. Never alter a URL: return URLs exactly as received, and only URLs that were in your input. If an item's excerpt is too thin to support a statement, say less, not more.\\n\\nRUN LOGGING. Every call you make is logged with model, input tokens, output tokens and cost, and the run is capped. Return only the JSON asked for: no preamble, no commentary, no markdown fences, nothing padded.\", output_config: { effort: \"low\", format: { type: 'json_schema', schema: {\"type\": \"object\", \"properties\": {\"items\": {\"type\": \"array\", \"items\": {\"type\": \"object\", \"properties\": {\"url\": {\"type\": \"string\"}, \"summary\": {\"type\": \"string\"}, \"tag\": {\"type\": \"string\", \"enum\": [\"marketing-ops-ai\", \"agent-readiness\", \"other\"]}}, \"required\": [\"url\", \"summary\", \"tag\"], \"additionalProperties\": false}}}, \"required\": [\"items\"], \"additionalProperties\": false} } }, messages: [{ role: 'user', content: user }] } } }];\n"
+      },
+      "id": "cb5ef05d-d126-5507-8f99-768ed3e228ad",
+      "name": "After Researcher",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "f1fe0aa0-52ba-5feb-bbd9-2350c152eea9",
+      "name": "Summarizer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2220,
+        120
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Bdvgd2nJk9NDSzTC",
+          "name": "anthropic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Structured outputs: first content block is text holding valid JSON.\nfunction parsed(resp) {\n  const block = (resp.content || []).find(b => b.type === 'text');\n  if (!block) throw new Error('No text block in model response: stop_reason=' + resp.stop_reason);\n  return JSON.parse(block.text);\n}\nfunction byUrl(items) { const m = new Map(); for (const i of items) m.set(i.url, i); return m; }\n\nconst kept = byUrl(JSON.parse($('After Researcher').first().json.body.messages[0].content.replace(/^[^\\n]*\\n/, '')));\nconst out = parsed($input.first().json);\nconst summarized = [];\nfor (const s of out.items || []) {\n  const rec = kept.get(s.url);\n  if (!rec) continue;  // claim rule: unknown url, dropped\n  summarized.push({ ...rec, summary: s.summary, tag: s.tag });\n}\nif (!summarized.length) throw new Error('Summarizer returned 0 known items');\nconst user = 'Summarized items as JSON:\\n' + JSON.stringify(summarized);\nreturn [{ json: { summarized: summarized.length, body: { model: \"claude-sonnet-5-5\", max_tokens: 4000, system: \"You are the Editor in a weekly three-agent signal scout. You receive summarized, tagged items. Keep the 5 to 8 best for a weekly digest that feeds LinkedIn posts: cut everything tagged 'other', cut duplicates of the same story (keep the primary source), and prefer items with a concrete number, decision or thing that broke over announcements. For each pick write a one-line post angle in the brand voice and a why of at most 15 words. Write a two-sentence intro for the digest that names the week's main thread. If fewer than 5 items are on topic, pick fewer and say so in the intro; never pad with off-topic items.\\n\\nTOPIC BRIEF. This scout watches two things only: (1) AI adoption in marketing operations: how marketing and ops teams actually put AI to work in planning, intake, content production, campaign execution, martech stacks, reporting, and the operating model around them; (2) agent readiness: what it takes for a company, its data, its systems, its content and its commerce surfaces to be used by AI agents (protocols like MCP, agentic commerce and payments, agent-accessible catalogs and APIs, governance of agents at work). Pure model research, consumer gadgets, funding news, and generic productivity tips are off-topic unless an item ties them to one of the two.\\n\\nCLAIM RULE. Never state a fact that is not in the item you were given. Never invent a number, a quote, a company action or a date. Never alter a URL: return URLs exactly as received, and only URLs that were in your input. If an item's excerpt is too thin to support a statement, say less, not more.\\n\\nBRAND VOICE (for post angles). The reader is Shane LaBounty: a senior marketing-operations leader who ran $100M+ marketing budgets, 1,000+ projects a year and a 150-marketer martech stack, and now tests AI against that world and reports what held and what broke. Experience first, experiment second. Specific over general: one real number or moment beats polished generalities. Warm, direct, first person, contractions fine. Never hype, never beginner voice ('I'm learning AI'), never a pitch. Never use: 'excited to share', 'humbled', 'game-changer', 'hope this finds you well', 'pick your brain', 'synergy', 'circle back', emoji. A post angle is one sentence, at most 25 words, that a CMO who has never met Shane would read and think 'that person has done the work'. It must be defensible from the item alone.\\n\\nRUN LOGGING. Every call you make is logged with model, input tokens, output tokens and cost, and the run is capped. Return only the JSON asked for: no preamble, no commentary, no markdown fences, nothing padded.\", output_config: { effort: \"medium\", format: { type: 'json_schema', schema: {\"type\": \"object\", \"properties\": {\"intro\": {\"type\": \"string\"}, \"picks\": {\"type\": \"array\", \"items\": {\"type\": \"object\", \"properties\": {\"url\": {\"type\": \"string\"}, \"post_angle\": {\"type\": \"string\"}, \"why\": {\"type\": \"string\"}}, \"required\": [\"url\", \"post_angle\", \"why\"], \"additionalProperties\": false}}}, \"required\": [\"intro\", \"picks\"], \"additionalProperties\": false} } }, messages: [{ role: 'user', content: user }] } } }];\n"
+      },
+      "id": "e5d09c3d-f659-5a5e-9e42-8722eb7f99e3",
+      "name": "After Summarizer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2440,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "id": "15ef28ff-925f-5b12-b908-fd41f28cadce",
+      "name": "Editor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2660,
+        120
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Bdvgd2nJk9NDSzTC",
+          "name": "anthropic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Structured outputs: first content block is text holding valid JSON.\nfunction parsed(resp) {\n  const block = (resp.content || []).find(b => b.type === 'text');\n  if (!block) throw new Error('No text block in model response: stop_reason=' + resp.stop_reason);\n  return JSON.parse(block.text);\n}\nfunction byUrl(items) { const m = new Map(); for (const i of items) m.set(i.url, i); return m; }\n\n// Deterministic digest: every link and fact comes from the item record, the model only adds angle, why, intro.\nconst PRICES = {\"claude-haiku-5-5\": [0.1, 0.5], \"claude-sonnet-5-5\": [2.0, 10.0]};\nconst summarized = byUrl(JSON.parse($('After Summarizer').first().json.body.messages[0].content.replace(/^[^\\n]*\\n/, '')));\nconst out = parsed($input.first().json);\nconst picks = [];\nfor (const p of out.picks || []) { const rec = summarized.get(p.url); if (rec) picks.push({ ...rec, post_angle: p.post_angle, why: p.why }); }\nif (!picks.length) throw new Error('Editor picked 0 known items');\n\nconst now = new Date();\nconst monday = new Date(now); monday.setUTCDate(now.getUTCDate() - ((now.getUTCDay() + 6) % 7));\nconst week = monday.toISOString().slice(0, 10);\nconst runAt = now.toISOString();\n\nconst usages = [\n  ['Researcher', $('Researcher').first().json],\n  ['Summarizer', $('Summarizer').first().json],\n  ['Editor', $input.first().json],\n].map(([agent, r]) => {\n  const u = r.usage || {}; const [pin, pout] = PRICES[r.model] || [0, 0];\n  const cost = (u.input_tokens || 0) * pin / 1e6 + (u.output_tokens || 0) * pout / 1e6;\n  return { run_at: runAt, agent, model: r.model, input_tokens: u.input_tokens || 0, output_tokens: u.output_tokens || 0, cost_usd: Math.round(cost * 1e6) / 1e6, status: 'ok', note: 'stop=' + r.stop_reason };\n});\nconst total = usages.reduce((a, u) => a + u.cost_usd, 0);\nconst counts = { fresh: $('Pack items').first().json.count, kept: $('After Researcher').first().json.kept, summarized: $('After Summarizer').first().json.summarized, picked: picks.length };\n\nconst lines = [`# Signal Scout — week of ${week}`, '',\n  `_Run ${runAt} · ${counts.fresh} new items from ${$('Feed list').all().length || 'the'} feeds · ${counts.kept} passed the Researcher · ${counts.picked} picked._`, '',\n  out.intro || '', ''];\npicks.forEach((p, i) => {\n  lines.push(`## ${i + 1}. ${p.title}`, `**${p.source}** · ${(p.date || '').slice(0, 10)} · ${p.url}`, '', p.summary, '',\n    `Tag: ${p.tag}`, '', `**Post angle:** ${p.post_angle}`, '', `_Why: ${p.why}_`, '');\n});\nlines.push('---', `Cost this run: ${usages.map(u => `${u.agent} ${u.model} ${u.input_tokens}→${u.output_tokens} tok $${u.cost_usd.toFixed(4)}`).join(' · ')} · total $${total.toFixed(4)}`, '');\n\nreturn [{ json: { week, run_at: runAt, file_name: `Signal Scout — week of ${week}.md`, digest_md: lines.join('\\n'), picks: picks.map(p => ({ url: p.url, title: p.title, source: p.source })), usages, counts, total_cost_usd: total } }];\n"
+      },
+      "id": "43b13b70-aabc-56ce-ab27-0f8295a40f28",
+      "name": "Compose digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.first().json.usages.map(u => ({ json: u }));\n"
+      },
+      "id": "9109a818-f578-5304-accc-9cb4c1f856a5",
+      "name": "Log usage",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3100,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "bxyWHL7tSS1XL5BE",
+          "cachedResultName": "run_log"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_at": "={{ $json.run_at }}",
+            "agent": "={{ $json.agent }}",
+            "model": "={{ $json.model }}",
+            "input_tokens": "={{ $json.input_tokens }}",
+            "output_tokens": "={{ $json.output_tokens }}",
+            "cost_usd": "={{ $json.cost_usd }}",
+            "status": "={{ $json.status }}",
+            "note": "={{ $json.note }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "run_at",
+              "displayName": "run_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "agent",
+              "displayName": "agent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "model",
+              "displayName": "model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "input_tokens",
+              "displayName": "input_tokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "output_tokens",
+              "displayName": "output_tokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cost_usd",
+              "displayName": "cost_usd",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "note",
+              "displayName": "note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bd35afc1-3415-543c-9322-fafbe2b5991a",
+      "name": "Run log",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        3320,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "createFromText",
+        "content": "={{ $('Compose digest').first().json.digest_md }}",
+        "name": "={{ $('Compose digest').first().json.file_name }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1SguTmcorJEpl3CftOFwr2FpANyhHQAZh"
+        },
+        "options": {}
+      },
+      "id": "c2c05e63-876a-5e44-95ed-5c573d3ccb77",
+      "name": "Write digest",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3540,
+        120
+      ],
+      "executeOnce": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "wAW20JZRMalAkhpe",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return $('Compose digest').first().json.picks.map(p => ({ json: { ...p, seen_at: $('Compose digest').first().json.run_at } }));\n"
+      },
+      "id": "d6303d22-8276-54af-b686-948566801e3a",
+      "name": "Unpack picks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3760,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "KY3yNvowzRzwrfgH",
+          "cachedResultName": "seen_items"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "url": "={{ $json.url }}",
+            "title": "={{ $json.title }}",
+            "source": "={{ $json.source }}",
+            "seen_at": "={{ $json.seen_at }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "source",
+              "displayName": "source",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "seen_at",
+              "displayName": "seen_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e3fc17fa-c227-5ae9-83d5-c76a3652ad7e",
+      "name": "Mark seen",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        3980,
+        120
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "ed00f5ca-eca0-501d-8edb-f03ac89ee7c0",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Error Trigger payload -> one run_log row. Nothing is marked seen on this path (AC 3).\nconst e = $input.first().json;\nconst err = (e.execution && e.execution.error) || {};\nreturn [{ json: { run_at: new Date().toISOString(), agent: 'workflow', model: '', input_tokens: 0, output_tokens: 0, cost_usd: 0,\n  status: 'error', note: ((e.execution && e.execution.lastNodeExecuted) || '?') + ': ' + String(err.message || err).slice(0, 400) } }];\n"
+      },
+      "id": "59cc7255-f183-5cb9-9f86-b97fa27036fc",
+      "name": "Log error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "bxyWHL7tSS1XL5BE",
+          "cachedResultName": "run_log"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "run_at": "={{ $json.run_at }}",
+            "agent": "={{ $json.agent }}",
+            "model": "={{ $json.model }}",
+            "input_tokens": "={{ $json.input_tokens }}",
+            "output_tokens": "={{ $json.output_tokens }}",
+            "cost_usd": "={{ $json.cost_usd }}",
+            "status": "={{ $json.status }}",
+            "note": "={{ $json.note }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "run_at",
+              "displayName": "run_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "agent",
+              "displayName": "agent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "model",
+              "displayName": "model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "input_tokens",
+              "displayName": "input_tokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "output_tokens",
+              "displayName": "output_tokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cost_usd",
+              "displayName": "cost_usd",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "note",
+              "displayName": "note",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4ed2a343-16e0-5e12-8965-f3027f66863c",
+      "name": "Run log (error)",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        480
+      ]
     }
   ],
   "connections": {
@@ -253,6 +807,160 @@
         [
           {
             "node": "Drop seen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Drop seen": {
+      "main": [
+        [
+          {
+            "node": "Pack items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pack items": {
+      "main": [
+        [
+          {
+            "node": "Researcher",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Researcher": {
+      "main": [
+        [
+          {
+            "node": "After Researcher",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "After Researcher": {
+      "main": [
+        [
+          {
+            "node": "Summarizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarizer": {
+      "main": [
+        [
+          {
+            "node": "After Summarizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "After Summarizer": {
+      "main": [
+        [
+          {
+            "node": "Editor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Editor": {
+      "main": [
+        [
+          {
+            "node": "Compose digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compose digest": {
+      "main": [
+        [
+          {
+            "node": "Log usage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log usage": {
+      "main": [
+        [
+          {
+            "node": "Run log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Run log": {
+      "main": [
+        [
+          {
+            "node": "Write digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write digest": {
+      "main": [
+        [
+          {
+            "node": "Unpack picks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unpack picks": {
+      "main": [
+        [
+          {
+            "node": "Mark seen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Log error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log error": {
+      "main": [
+        [
+          {
+            "node": "Run log (error)",
             "type": "main",
             "index": 0
           }

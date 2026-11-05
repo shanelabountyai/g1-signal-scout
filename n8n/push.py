@@ -18,7 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import build  # noqa: E402
 
-WORKFLOW_ID = "ZsNMHw5Y1QRjFtrI"  # created by the owner's Import from File on 2026-11-04
+WORKFLOW_ID = build.WORKFLOW_ID
 
 
 def env():
