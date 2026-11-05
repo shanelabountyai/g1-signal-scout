@@ -106,7 +106,7 @@ def ask_js(agent, user_content_js):
     return "return [{ json: { body: " + prompts.request_body(agent, user_content_js) + " } }];\n"
 
 PACK_JS = """// All unseen items -> one request to the Researcher. No items -> stop quietly (nothing to digest).
-const items = $input.all().map(i => i.json);
+const items = $input.all().map((i, idx) => ({ id: idx, ...i.json }));  // id = join key the agents answer with
 if (!items.length) return [];
 const user = 'Week items as JSON:\\n' + JSON.stringify(items);
 """ + ask_js(prompts.RESEARCHER, "user").replace("return [{ json: { body:", "return [{ json: { count: items.length, body:")
@@ -117,26 +117,26 @@ function parsed(resp) {
   if (!block) throw new Error('No text block in model response: stop_reason=' + resp.stop_reason);
   return JSON.parse(block.text);
 }
-function byUrl(items) { const m = new Map(); for (const i of items) m.set(i.url, i); return m; }
+function byId(items) { const m = new Map(); for (const i of items) m.set(i.id, i); return m; }
 """
 
 AFTER_RESEARCHER_JS = PARSE_JS + """
 // Join the Researcher's verdicts back onto the original records: the model never rewrites an item.
-const input = byUrl(JSON.parse($('Pack items').first().json.body.messages[0].content.replace(/^[^\\n]*\\n/, '')));
+const input = byId(JSON.parse($('Pack items').first().json.body.messages[0].content.replace(/^[^\\n]*\\n/, '')));
 const out = parsed($input.first().json);
 const kept = [];
-for (const v of out.items || []) if (v.keep && input.has(v.url)) kept.push(input.get(v.url));
+for (const v of out.items || []) if (v.keep && input.has(v.id)) kept.push(input.get(v.id));
 if (!kept.length) throw new Error('Researcher kept 0 of ' + input.size + ' items');
 const user = 'Items as JSON:\\n' + JSON.stringify(kept);
 """ + ask_js(prompts.SUMMARIZER, "user").replace("return [{ json: { body:", "return [{ json: { kept: kept.length, body:")
 
 AFTER_SUMMARIZER_JS = PARSE_JS + """
-const kept = byUrl(JSON.parse($('After Researcher').first().json.body.messages[0].content.replace(/^[^\\n]*\\n/, '')));
+const kept = byId(JSON.parse($('After Researcher').first().json.body.messages[0].content.replace(/^[^\\n]*\\n/, '')));
 const out = parsed($input.first().json);
 const summarized = [];
 for (const s of out.items || []) {
-  const rec = kept.get(s.url);
-  if (!rec) continue;  // claim rule: unknown url, dropped
+  const rec = kept.get(s.id);
+  if (!rec) continue;  // claim rule: unknown id, dropped
   summarized.push({ ...rec, summary: s.summary, tag: s.tag });
 }
 if (!summarized.length) throw new Error('Summarizer returned 0 known items');
@@ -146,10 +146,10 @@ const user = 'Summarized items as JSON:\\n' + JSON.stringify(summarized);
 COMPOSE_JS = PARSE_JS + f"""
 // Deterministic digest: every link and fact comes from the item record, the model only adds angle, why, intro.
 const PRICES = {json.dumps(PRICES)};
-const summarized = byUrl(JSON.parse($('After Summarizer').first().json.body.messages[0].content.replace(/^[^\\n]*\\n/, '')));
+const summarized = byId(JSON.parse($('After Summarizer').first().json.body.messages[0].content.replace(/^[^\\n]*\\n/, '')));
 const out = parsed($input.first().json);
 const picks = [];
-for (const p of out.picks || []) {{ const rec = summarized.get(p.url); if (rec) picks.push({{ ...rec, post_angle: p.post_angle, why: p.why }}); }}
+for (const p of out.picks || []) {{ const rec = summarized.get(p.id); if (rec) picks.push({{ ...rec, post_angle: p.post_angle, why: p.why }}); }}
 if (!picks.length) throw new Error('Editor picked 0 known items');
 
 const now = new Date();

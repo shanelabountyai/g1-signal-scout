@@ -39,13 +39,13 @@ RESEARCHER = {
     "name": "Researcher",
     "model": "claude-haiku-5-5",
     "effort": "low",
-    "max_tokens": 8000,
+    "max_tokens": 16000,
     "rules": ["topic_brief", "claim_rule", "run_logging"],
     "system": (
         "You are the Researcher in a weekly three-agent signal scout. You receive the new feed items of the week "
-        "(title, url, source, date, excerpt) that have not been seen before. Your only job is a relevance screen: "
+        "(id, title, url, source, date, excerpt) that have not been seen before. Your only job is a relevance screen: "
         "mark each item keep=true if it plausibly belongs to the topic brief, keep=false otherwise, with a reason of "
-        "at most 12 words. Keep borderline items; the Editor cuts later. Return every input url exactly once."
+        "at most 8 words. Keep borderline items; the Editor cuts later. Return every input id exactly once."
     ),
     "schema": {
         "type": "object",
@@ -54,8 +54,8 @@ RESEARCHER = {
                 "type": "array",
                 "items": {
                     "type": "object",
-                    "properties": {"url": {"type": "string"}, "keep": {"type": "boolean"}, "reason": {"type": "string"}},
-                    "required": ["url", "keep", "reason"],
+                    "properties": {"id": {"type": "integer"}, "keep": {"type": "boolean"}, "reason": {"type": "string"}},
+                    "required": ["id", "keep", "reason"],
                     "additionalProperties": False,
                 },
             }
@@ -69,14 +69,14 @@ SUMMARIZER = {
     "name": "Summarizer",
     "model": "claude-haiku-5-5",
     "effort": "low",
-    "max_tokens": 8000,
+    "max_tokens": 16000,
     "rules": ["topic_brief", "claim_rule", "run_logging"],
     "system": (
-        "You are the Summarizer in a weekly three-agent signal scout. For each item (title, url, source, date, "
+        "You are the Summarizer in a weekly three-agent signal scout. For each item (id, title, url, source, date, "
         "excerpt) write a two-sentence summary of what the item says, using only what the item contains, and give "
         "it exactly one tag: 'marketing-ops-ai' (AI adoption in marketing operations), 'agent-readiness' (what it "
         "takes to be used by agents: protocols, agentic commerce, agent governance), or 'other'. Return every input "
-        "url exactly once."
+        "id exactly once."
     ),
     "schema": {
         "type": "object",
@@ -86,11 +86,11 @@ SUMMARIZER = {
                 "items": {
                     "type": "object",
                     "properties": {
-                        "url": {"type": "string"},
+                        "id": {"type": "integer"},
                         "summary": {"type": "string"},
                         "tag": {"type": "string", "enum": ["marketing-ops-ai", "agent-readiness", "other"]},
                     },
-                    "required": ["url", "summary", "tag"],
+                    "required": ["id", "summary", "tag"],
                     "additionalProperties": False,
                 },
             }
@@ -104,7 +104,7 @@ EDITOR = {
     "name": "Editor",
     "model": "claude-sonnet-5-5",
     "effort": "medium",
-    "max_tokens": 4000,
+    "max_tokens": 8000,
     "rules": ["topic_brief", "claim_rule", "brand_voice", "run_logging"],
     "system": (
         "You are the Editor in a weekly three-agent signal scout. You receive summarized, tagged items. Keep the 5 to "
@@ -122,8 +122,8 @@ EDITOR = {
                 "type": "array",
                 "items": {
                     "type": "object",
-                    "properties": {"url": {"type": "string"}, "post_angle": {"type": "string"}, "why": {"type": "string"}},
-                    "required": ["url", "post_angle", "why"],
+                    "properties": {"id": {"type": "integer"}, "post_angle": {"type": "string"}, "why": {"type": "string"}},
+                    "required": ["id", "post_angle", "why"],
                     "additionalProperties": False,
                 },
             },
