@@ -19,9 +19,9 @@ Status: `todo` · `doing` · `done` · `blocked`.
 | B8 | Dedupe proof. Run twice in a row. | Second run's digest shares no URL with the first. (AC 2.) | done |
 | B9 | Error path. Error Trigger workflow + Stop and Error on a failed Drive write: logs the failure (run-log entry) and stops; nothing is marked seen. | Test: point the Drive node at an invalid folder id, run, confirm `seen_items` unchanged and the error logged; restore the folder id. (AC 3.) | done |
 | B10 | Duplication log. `docs/duplication-log.md`: every rule copied into more than one agent, which agents carry it, verbatim text. | Lists at least topic brief, claim rule, brand voice, run logging with the agents each appears in. (AC 4.) | done |
-| B11 | n8n README. `n8n/README.md`: exact import steps, credential names the JSON expects, Data Table creation, folder id, how to run with fixtures, how to run live, how to turn the schedule on (not done without the owner's go). | Owner can re-import from scratch following only the README. | todo |
+| B11 | n8n README. `n8n/README.md`: exact import steps, credential names the JSON expects, Data Table creation, folder id, how to run with fixtures, how to run live, how to turn the schedule on (not done without the owner's go). | Owner can re-import from scratch following only the README. | done |
 | B12 | Cost log. `docs/run-log.md`: per run, per agent, tokens in/out and dollars at D-8 prices; running total against the $10 cap. | Every live run in the build has an entry; total shown. | done |
-| B13 | Acceptance. Walk AC 1–4 against the live workflow with the owner and record the result in NEXT.md. Schedule stays off until he says go. | All four pass; NEXT.md says so and names G0 as next. | todo |
+| B13 | Acceptance. Walk AC 1–4 against the live workflow with the owner and record the result in NEXT.md. Schedule stays off until he says go. | All four pass; NEXT.md says so and names G0 as next. | done (all four pass; see NEXT.md; schedule stays off until H4) |
 
 ## G1·C (code) — starts only after B13 passes (D-1)
 

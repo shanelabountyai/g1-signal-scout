@@ -1,27 +1,66 @@
-# n8n import — G1 Weekly Signal Scout
+# n8n — G1 Weekly Signal Scout
 
-Owner's n8n: 2.46.6, self-hosted via `npx n8n`, data in `~/.n8n` (D-7). Filled in task by task; final version at B11.
+Owner's n8n: 2.46.6, self-hosted via `npx n8n`, data in `~/.n8n` (D-7). Workflow id `ZsNMHw5Y1QRjFtrI`, 26 nodes.
 
-## What the JSON expects to exist already
+## Files
 
-| Thing | Name / id | Where it's used |
+| File | What |
+|---|---|
+| `g1-signal-scout.json` | The importable workflow. Generated; do not hand-edit. |
+| `build.py` | Builds the JSON (and `docs/duplication-log.md`). Node ids, credential ids, folder id and prices are constants at the top. `python3 n8n/build.py` |
+| `prompts.py` | The three agents' system prompts, models, effort, output ceilings and JSON schemas. The shared rules each agent carries live here once and are copied in at build time (D-5). |
+| `push.py` | `push`: build and PUT the workflow into n8n over its public API. `exec [N] [node]`: per-node item counts and errors for the Nth-latest run. Needs `N8N_API_KEY` in `.env` (gitignored). |
+
+## What the workflow expects to exist in n8n
+
+| Thing | Name / id | Used by |
 |---|---|---|
-| Data Table `seen_items` (`url` string, `title` string, `source` string, `seen_at` date) | id `KY3yNvowzRzwrfgH` | Seen rows, Mark seen |
-| Header Auth credential for Anthropic (`x-api-key`) | `anthropic` (id `Bdvgd2nJk9NDSzTC`) | Researcher, Summarizer, Editor (from B4) |
-| Google Drive OAuth2 credential | `Google Drive account` | Write digest (from B7) |
+| Data Table `seen_items` (`url`, `title`, `source` string; `seen_at` date) | `KY3yNvowzRzwrfgH` | Seen rows, Mark seen |
+| Data Table `run_log` (`run_at` date; `agent`, `model`, `status`, `note` string; `input_tokens`, `output_tokens`, `cost_usd` number) | `bxyWHL7tSS1XL5BE` | Run log, Run log (error) |
+| Header Auth credential (`x-api-key` = Anthropic key) | `anthropic` / `Bdvgd2nJk9NDSzTC` | Researcher, Summarizer, Editor |
+| Google Drive OAuth2 credential | `Google Drive account` / `wAW20JZRMalAkhpe` | Write digest |
+| Drive folder "Signal Scout" | `1SguTmcorJEpl3CftOFwr2FpANyhHQAZh` | Write digest |
 
-If an id differs in your install, edit the constants at the top of `n8n/build.py` and run `python3 n8n/build.py`.
+On another install: create the two Data Tables (Overview → Data Tables) and the two credentials, put their ids in `build.py`, then import.
 
-## Import (or re-import after a change)
+## Import from scratch
 
-1. In n8n: **Overview → Workflows → ⋯ (top right) → Import from File** → pick `n8n/g1-signal-scout.json`.
-2. Re-importing creates a second copy; delete the old one first, or open the old one and use **⋯ → Import from File** inside it to replace its nodes.
-3. The Schedule Trigger is imported **inactive**. Leave it off until the owner says go (D-6, H4).
+1. **Overview → Workflows → ⋯ → Import from File** → `n8n/g1-signal-scout.json`.
+2. Set `WORKFLOW_ID` in `build.py` to the new workflow's id (from its URL) so `push.py` can update it.
+3. The Schedule Trigger imports **inactive**. It stays off until the owner says go (D-6, H4).
 
-## Run live (real feeds)
+## Update after a change
 
-Click **Execute workflow**. On this install that runs from the Schedule Trigger (fires once, now): Feed list → RSS Read → Normalize → Seen rows → Drop seen → … Nothing is marked seen until the Drive write succeeds (B7). First live run on 2026-11-04: 15 feeds → 2069 RSS items → 106 from the last 7 days.
+`python3 n8n/push.py push`, then reload the workflow page in n8n. (Re-importing by hand creates a second copy; prefer push.)
 
-## Run with fixtures (no network)
+## How a run goes
 
-Open the **Split fixtures** node and click **Execute step**; n8n runs the fixtures path up to it (Manual Trigger → Read fixtures → Extract JSON → Split fixtures), then Execute step on **Drop seen** continues from there. Fixtures are read from the repo path baked into the Read fixtures node (`fixtures/feed-items.json`); regenerate them with `python3 fixtures/make-fixtures.py` if the 7-day freshness window has emptied them.
+```
+Schedule Trigger (Mon 06:00 America/Chicago)
+  → Feed list (15 feeds, copy of config/feeds.md)
+  → RSS Read (one node, runs per feed; a dead feed is skipped, not fatal)
+  → Normalize (title, url, source, date, excerpt; last 7 days only; tracking params stripped)
+  → Seen rows (all of seen_items) → Drop seen
+  → Pack items → Researcher (Haiku 5.5, relevance screen)
+  → After Researcher → Summarizer (Haiku 5.5, 2-sentence summary + tag)
+  → After Summarizer → Editor (Sonnet 5.5, keep 5–8, post angle, intro)
+  → Compose digest (Markdown built in code; links come from the records, never from the model)
+  → Log usage → Run log (3 rows: tokens and $ per agent)
+  → Write digest (Drive, "Signal Scout — week of YYYY-MM-DD.md")
+      success → Unpack picks → Mark seen (only now are items recorded)
+      error   → Log error → Run log (error) → Stop: run failed
+```
+
+Nothing is marked seen unless the Drive write succeeded (AC 3). A run with no new items stops quietly at Pack items.
+
+## Run it by hand
+
+- **Live:** click **Execute workflow**. On this install that fires the Schedule Trigger once. About $0.03 per run (see `docs/run-log.md`).
+- **Fixtures (no feed on the network):** open **Split fixtures** → **Execute step** (Manual Trigger → Read fixtures → Extract JSON → Split fixtures), then **Execute step** on a later node to continue. Fixtures: `fixtures/feed-items.json`; regenerate with `python3 fixtures/make-fixtures.py` when the 7-day window has emptied them. The model calls still cost money on this path.
+- **Error path test:** `B9_BREAK_DRIVE=1 python3 n8n/push.py push`, run, expect red at **Stop: run failed** and an `error` row in `run_log`; then `python3 n8n/push.py push` to restore.
+
+## Turning the schedule on (H4, owner only)
+
+1. Toggle the workflow **Active** (top right). n8n 2.x publishes a version when you do.
+2. Then set **Settings → Error Workflow** to this workflow itself, so a failure in any node (not only Drive) writes a `run_log` error row. Or set `"errorWorkflow": WORKFLOW_ID` in `build.py`'s settings and push.
+3. The Mac must be awake with `npx n8n` running at Monday 06:00 CT, or the run slips to the next time n8n is up.
