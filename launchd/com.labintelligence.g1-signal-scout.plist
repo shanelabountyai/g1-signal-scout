@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  G1·C scheduler (C6, D-29). Weekly Signal Scout, code version, on the owner's Mac.
+  Fire time per D-11: Monday 06:00 America/Chicago. launchd uses the Mac's local clock, so this is
+  correct while the Mac's time zone is America/Chicago; if the Mac travels, the run moves with it.
+
+  NOT LOADED by any build session. Loading it is the owner's hand step (NEXT.md / BACKLOG H7):
+    1. Edit the three PATH-ish values below: the repo path (twice) and the uv binary path (`which uv`).
+    2. cp launchd/com.labintelligence.g1-signal-scout.plist ~/Library/LaunchAgents/
+    3. launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.labintelligence.g1-signal-scout.plist
+    4. launchctl kickstart -k gui/$(id -u)/com.labintelligence.g1-signal-scout   (one test run now)
+  To stop: launchctl bootout gui/$(id -u)/com.labintelligence.g1-signal-scout
+
+  Secrets are not in this file: the scout reads ANTHROPIC_API_KEY (and the Drive variables) from the
+  repo's .env through uv run with the env-file option (see ProgramArguments). The Mac must be awake at fire time, or the run slips
+  to the next wake (launchd runs a missed StartCalendarInterval once on wake).
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.labintelligence.g1-signal-scout</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/shane/.local/bin/uv</string>
+    <string>run</string>
+    <string>--directory</string>
+    <string>/Users/shane/Projects/agentic-track/g1-signal-scout</string>
+    <string>--env-file</string>
+    <string>/Users/shane/Projects/agentic-track/g1-signal-scout/.env</string>
+    <string>scout</string>
+    <string>--live</string>
+    <string>--sink</string>
+    <string>local</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/shane/Projects/agentic-track/g1-signal-scout</string>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Weekday</key>
+    <integer>1</integer>
+    <key>Hour</key>
+    <integer>6</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key>
+    <string>/Users/shane/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+    <key>HOME</key>
+    <string>/Users/shane</string>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>/Users/shane/Library/Logs/g1-signal-scout.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/shane/Library/Logs/g1-signal-scout.err.log</string>
+
+  <key>RunAtLoad</key>
+  <false/>
+  <key>ProcessType</key>
+  <string>Background</string>
+</dict>
+</plist>
