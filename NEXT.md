@@ -28,7 +28,7 @@ G1·B (n8n) is unchanged and still scheduled: first automatic run Monday 2026-11
 ## Owner's hand steps
 
 1. **Review the `g1c` PR**: https://github.com/shanelabountyai/g1-signal-scout/pull/1 (not merged). Merge only on your own say-so.
-2. **H5 — first live run.** Confirm model ids and prices at Anthropic's pricing page against `docs/DECISIONS.md` D-8/D-28. Then, in the repo with `ANTHROPIC_API_KEY` in `.env`:
+2. **H5 — first live run.** (Prices confirmed on Anthropic's page 2026-11-06, D-35; PR #1 merged.) In the repo with `ANTHROPIC_API_KEY` in `.env`:
    ```bash
    uv sync --all-groups
    uv run --env-file .env scout --fixtures --record      # replaces the hand-made recorded file with real responses (~$0.07)
