@@ -400,9 +400,52 @@ def duplication_log() -> str:
               "| Join model output back to the original record by id; drop unknown ids (claim rule enforced in code) | After Researcher, After Summarizer, Compose digest | 3 |",
               "| Parse the first text block of a structured-output response | After Researcher, After Summarizer, Compose digest (`PARSE_JS`) | 3 |",
               "| Messages API request shape (model, max_tokens, system, output_config, credential, version header) | Pack items, After Researcher, After Summarizer + the three HTTP Request nodes | 3 |",
-              "| Token and cost accounting at D-8 prices | Compose digest (`PRICES`) | 1 in n8n; G1·C will carry a second copy |",
+              "| Token and cost accounting at D-8 prices | Compose digest (`PRICES`) | 1 in n8n; G1·C carries none (it reads G0's `evaluation.PRICES_PER_MTOK`, D-27) |",
               ""]
+    lines += after_attach_section()
     return "\n".join(lines)
+
+
+def after_attach_section() -> list[str]:
+    """The G1 half of G0's AC 5: what G1·C still carries after attaching to the shared layer (D-23, 2026-11-06).
+    Numbers are counted from the source: n8n/prompts.py (before) and src/scout/prompts.py + src/scout/agents.py (after)."""
+    before = {k: len([a for a in prompts.AGENTS if k in a["rules"]]) for k in prompts.SHARED}
+    rows = [
+        ("topic_brief", before["topic_brief"], 1, "G1·C `src/scout/prompts.py` `TOPIC_BRIEF`: one constant, injected into the four prompts. G1's topic, not a shared capability."),
+        ("claim_rule", before["claim_rule"], 0, "**G0** `claims_registry` + `evaluation(claim_rule_v1)`, called by `src/scout/agents.py` on every summary, angle and draft. The prompts keep a one-line pointer."),
+        ("brand_voice", before["brand_voice"], 0, "**G0** `brand_policy` (policy v1 is G1's text, verbatim) + `evaluation(post_angle_v1)`, called on every angle and draft. One-line pointer in the Editor and Writer prompts."),
+        ("run_logging", before["run_logging"], 0, "**G0** `observability`, called after every model call with the response usage; run total and $10 cap come back. One-line pointer in every prompt."),
+    ]
+    out = ["## After attaching to G0 (G1·C, branch `g1c`, 2026-11-06; D-23)", "",
+           "G1·B (n8n) still carries every copy above and keeps running as shipped. G1·C (code) attaches to the shared layer "
+           "`shanelabountyai/g0-shared-layer` (pinned in `pyproject.toml`) and carries only `topic_brief`. "
+           "`tests/test_prompts.py` fails if a moved rule reappears in a G1·C prompt. These are the real numbers for the G1 half of G0's "
+           "`docs/attach.md` table; G0's own copy of that table was written before G1·C existed and is superseded by this section.", "",
+           "**Rules in prompts**", "", "| Rule | Copies before (G1·B) | Copies in G1·C | Where it lives now |", "|---|---|---|---|"]
+    out += [f"| `{k}` | {b} | {a} | {where} |" for k, b, a, where in rows]
+    code_rows = [
+        ("Join model output back to the record by id; drop unknown ids", 3, 1, "`src/scout/agents.py` (one helper pattern in `Runner`); G1-specific plumbing"),
+        ("Parse the first text block of a structured-output response", 3, 0, "the Agent SDK's `ResultMessage.structured_output`; `src/scout/llm.py` keeps only a fallback JSON parse"),
+        ("Messages API request shape", 3, 1, "`src/scout/llm.py` `AgentSdkCaller` builds `ClaudeAgentOptions` once for all four agents"),
+        ("Token and cost accounting at D-8 prices", 1, 0, "**G0** `evaluation.PRICES_PER_MTOK` via `observability`; `tests/test_costlog.py` proves G1·C has no price table"),
+    ]
+    out += ["", "**Rules in code**", "", "| Rule | Copies before (G1·B) | Copies in G1·C | Where |", "|---|---|---|---|"]
+    out += [f"| {k} | {b} | {a} | {where} |" for k, b, a, where in code_rows]
+    p_before = sum(b for _, b, _, _ in rows); p_after = sum(a for _, _, a, _ in rows)
+    c_before = sum(b for _, b, _, _ in code_rows); c_after = sum(a for _, _, a, _ in code_rows)
+    dup_before = sum(1 for _, b, _, _ in rows if b > 1) + sum(1 for _, b, _, _ in code_rows if b > 1)
+    dup_after = sum(1 for _, _, a, _ in rows if a > 1) + sum(1 for _, _, a, _ in code_rows if a > 1)
+    out += ["", "**Totals for G1**", "", "| | Before (G1·B) | After (G1·C) |", "|---|---|---|",
+            f"| Rules carried by more than one agent | **{dup_before}** ({sum(1 for _, b, _, _ in rows if b > 1)} prompt + {sum(1 for _, b, _, _ in code_rows if b > 1)} code) | **{dup_after}** |",
+            f"| Copies of the 8 shared rules in G1's source | **{p_before + c_before}** ({p_before} prompt + {c_before} code) | **{p_after + c_after}** ({p_after} prompt + {c_after} code) + 4 in G0 |",
+            "| Integrations (agents × capabilities each carried itself) | **16** (4 agents × claims, brand, logging, cost) | **4** (4 agents → 1 in-process layer) + 4 capabilities built once in G0 |",
+            "| Shared-layer calls in one fixture run (7 picks, 3 drafts) | 0 | health 1 · observability 4 · claims_registry 26 · brand_policy 10 · evaluation 33 · measurement 3 |",
+            "",
+            "Notes from the first attached run (fixtures, 2026-11-06): in draft 3 `claims_registry` marks one of Shane's own record facts (\"unified 7 data sources into one marketing "
+            "performance dashboard\") `unsupported` because it shares topic words with a seeded third-party stat whose numbers differ, and marks two others (\"23% of B2B marketers\", "
+            "\"$100M+ budget from 26 marketers to 3\") `needs_source`. The registry holds published statistics, not the owner's record or the week's items; the digest shows the flag and "
+            "the owner decides. Candidate for G0 v1.1: registry rows for the verified record, or a `scope` input. Recorded in NEXT.md.", ""]
+    return out
 
 
 def main_write():
