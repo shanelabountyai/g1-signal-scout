@@ -3,6 +3,9 @@
 !.env.example
 __pycache__/
 .DS_Store
-data/
+# G1·C
 .venv/
+out/
+*.sqlite
+*.egg-info/
 .pytest_cache/

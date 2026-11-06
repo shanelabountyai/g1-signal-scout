@@ -1,16 +1,31 @@
 [project]
-name = "scout"
+name = "g1-signal-scout"
 version = "0.1.0"
-description = "Weekly Signal Scout, G1·C: Python + Claude Agent SDK"
+description = "Weekly Signal Scout, code version (G1·C): four agents in sequence with the Claude Agent SDK, attached to the shared capability layer (G0)."
+readme = "README.md"
 requires-python = ">=3.12"
+license = { text = "MIT" }
 dependencies = [
-    "claude-agent-sdk>=0.2.178",
-    "feedparser>=6.0.14",
-    "pydantic>=2.14.3",
+    # The shared layer, pinned to the exact kickoff commit this build was read against (D-23).
+    # Move the pin to the v0.1.0 tag once the owner merges and tags g0-shared-layer.
+    "g0-shared-layer @ git+https://github.com/shanelabountyai/g0-shared-layer@1cb74df6c3e4a5212f681f7f7bdf594b37b53070",
+    "claude-agent-sdk>=0.2.170,<0.3",
+    "pydantic>=2.11,<3",
+    "anyio>=4",
 ]
+
+[project.optional-dependencies]
+# Google Drive sink (D-25); not installed unless asked for.
+drive = ["google-api-python-client>=2.150", "google-auth>=2.35"]
 
 [project.scripts]
 scout = "scout.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -19,7 +34,14 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/scout"]
 
-[dependency-groups]
-dev = [
-    "pytest>=9.2.0",
-]
+[tool.hatch.metadata]
+allow-direct-references = true  # the G0 git pin above
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-q"
+
+[tool.uv]
+required-version = ">=0.5"
