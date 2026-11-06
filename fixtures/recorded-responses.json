@@ -1,0 +1,344 @@
+{
+  "_about": "HAND-MADE SAMPLE, NOT A RECORDING (D-29). No ANTHROPIC_API_KEY was present in the unattended G1·C build run of 2026-11-06, so these responses were written by hand in each agent's output schema from fixtures/feed-items.json (29 fresh items after normalization, ids 0-28 in fixture order). They exist so the pipeline, the shared-layer checks, the sinks and the seen-items order can run and be tested end to end without a model call. Usage is zero on purpose and `recorded_live` is false, so the cost shows as 'not measured'. Replace this file with a live recording: `ANTHROPIC_API_KEY=... uv run scout --fixtures --record`.",
+  "recorded_live": false,
+  "recorded_at": null,
+  "Researcher": {
+    "model": "claude-haiku-5-5",
+    "response": {
+      "items": [
+        {
+          "id": 0,
+          "keep": true,
+          "reason": "AI agents in marketing and CX"
+        },
+        {
+          "id": 1,
+          "keep": true,
+          "reason": "buying AI context for martech"
+        },
+        {
+          "id": 2,
+          "keep": true,
+          "reason": "borderline: marketing budget mechanics"
+        },
+        {
+          "id": 3,
+          "keep": false,
+          "reason": "print ad campaign, no AI"
+        },
+        {
+          "id": 4,
+          "keep": true,
+          "reason": "AEO tooling for agencies"
+        },
+        {
+          "id": 5,
+          "keep": false,
+          "reason": "reader profile"
+        },
+        {
+          "id": 6,
+          "keep": true,
+          "reason": "AEO keyword gaps"
+        },
+        {
+          "id": 7,
+          "keep": true,
+          "reason": "AEO measurement survey number"
+        },
+        {
+          "id": 8,
+          "keep": true,
+          "reason": "Claude integrations in GTM stack"
+        },
+        {
+          "id": 9,
+          "keep": true,
+          "reason": "lead assignment automation result"
+        },
+        {
+          "id": 10,
+          "keep": true,
+          "reason": "borderline: email deliverability"
+        },
+        {
+          "id": 11,
+          "keep": false,
+          "reason": "website builders listicle"
+        },
+        {
+          "id": 12,
+          "keep": false,
+          "reason": "OpenAI acquisition news"
+        },
+        {
+          "id": 13,
+          "keep": false,
+          "reason": "cyber model availability"
+        },
+        {
+          "id": 14,
+          "keep": false,
+          "reason": "CAD and PCB engineering"
+        },
+        {
+          "id": 15,
+          "keep": true,
+          "reason": "borderline: Google AI roundup"
+        },
+        {
+          "id": 16,
+          "keep": true,
+          "reason": "borderline: workflow rate limiting"
+        },
+        {
+          "id": 17,
+          "keep": true,
+          "reason": "automation team operating model"
+        },
+        {
+          "id": 18,
+          "keep": false,
+          "reason": "survey apps listicle"
+        },
+        {
+          "id": 19,
+          "keep": false,
+          "reason": "booking plugins listicle"
+        },
+        {
+          "id": 20,
+          "keep": true,
+          "reason": "always-on agent product"
+        },
+        {
+          "id": 21,
+          "keep": true,
+          "reason": "MCP SDK maturity"
+        },
+        {
+          "id": 22,
+          "keep": true,
+          "reason": "borderline: payments ops result"
+        },
+        {
+          "id": 23,
+          "keep": false,
+          "reason": "datasette release"
+        },
+        {
+          "id": 24,
+          "keep": false,
+          "reason": "datasette release"
+        },
+        {
+          "id": 25,
+          "keep": false,
+          "reason": "datasette release"
+        },
+        {
+          "id": 26,
+          "keep": false,
+          "reason": "newsletter roundup, off topic"
+        },
+        {
+          "id": 27,
+          "keep": false,
+          "reason": "model research newsletter"
+        },
+        {
+          "id": 28,
+          "keep": true,
+          "reason": "building agents for lawyers"
+        }
+      ]
+    },
+    "stop_reason": "hand-made",
+    "sdk_cost_usd": null,
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    }
+  },
+  "Summarizer": {
+    "model": "claude-haiku-5-5",
+    "response": {
+      "items": [
+        {
+          "id": 0,
+          "summary": "Paul Meinshausen, co-founder of Aampe and head of agentic at MoEngage, joins Conversations with MarTech to discuss the evolving role of AI agents in marketing and customer experience. The conversation covers where agents fit in marketing and CX work today.",
+          "tag": "marketing-ops-ai"
+        },
+        {
+          "id": 1,
+          "summary": "MarTech argues that vendors are selling AI context to fill gaps in agents' knowledge, but most of that context is work a marketing team already owns. The piece asks what to do before buying a platform with AI context built in.",
+          "tag": "marketing-ops-ai"
+        },
+        {
+          "id": 2,
+          "summary": "A worked example of a retail promotion with $340,000 on the planning sheet, split across retail media ($230,000), paid media ($50,000) and brand ($60,000). The piece shows how to fund full-funnel retail media across three budgets.",
+          "tag": "other"
+        },
+        {
+          "id": 4,
+          "summary": "Marketing Brew looks at how agencies are navigating the many answer engine optimization (AEO) platforms on the market. These tools aim to boost brand visibility inside AI platforms.",
+          "tag": "marketing-ops-ai"
+        },
+        {
+          "id": 6,
+          "summary": "HubSpot says content and SEO marketers need to add AEO keyword gap analysis to their strategies to improve visibility in AI answer engines. Traditional SEO keyword gaps show which terms a company isn't ranking for versus competitors; AEO gaps extend that to AI answers.",
+          "tag": "marketing-ops-ai"
+        },
+        {
+          "id": 7,
+          "summary": "HubSpot's State of AEO 2026 report found that measuring success is the top AEO challenge among B2B marketers, at 23%. The article addresses how to benchmark AI search performance against an industry.",
+          "tag": "marketing-ops-ai"
+        },
+        {
+          "id": 8,
+          "summary": "HubSpot explains Claude integrations, which link external tools such as a CRM directly to Claude so marketers stop switching between apps. The piece lists integrations worth adding to a GTM stack.",
+          "tag": "marketing-ops-ai"
+        },
+        {
+          "id": 9,
+          "summary": "Salesforce redraws account territories and refreshes sales routing rules every year, often two weeks before they take effect, and under the old process leads could follow outdated rules for up to six weeks. With Data 360 the team cut lead assignment from 20 minutes to 20 seconds.",
+          "tag": "marketing-ops-ai"
+        },
+        {
+          "id": 10,
+          "summary": "Salesforce describes the email marketer's moment when a campaign passes authentication and avoids spam but lands in Gmail's Promotions tab. Reaching the inbox is the win; standing out is the next challenge.",
+          "tag": "other"
+        },
+        {
+          "id": 15,
+          "summary": "Google rounds up the AI news it announced in October 2026. The excerpt gives no detail beyond the roundup itself.",
+          "tag": "other"
+        },
+        {
+          "id": 16,
+          "summary": "n8n explains that a burst of 429 Too Many Requests errors can halt an otherwise healthy workflow, and that retry timing matters. The article covers throttling versus rate limiting and backoff strategies.",
+          "tag": "other"
+        },
+        {
+          "id": 17,
+          "summary": "n8n's head of internal AI and automation, Romina da Costa, explains where the service desk model for an automation team hits its limit. She shares the four principles her team now follows instead.",
+          "tag": "marketing-ops-ai"
+        },
+        {
+          "id": 20,
+          "summary": "Zapier describes Claude Duet as Anthropic's always-on AI agent, positioned against Meta's Muse and OpenAI's dots. Instead of waiting for a prompt, it sends a morning brief and checks connected apps.",
+          "tag": "agent-readiness"
+        },
+        {
+          "id": 21,
+          "summary": "The official Ruby SDK for Model Context Protocol has reached Tier 1 in MCP's SDK tiering system. It joins the TypeScript, Python, C#, Go and Rust SDKs at that tier.",
+          "tag": "agent-readiness"
+        },
+        {
+          "id": 22,
+          "summary": "Stripe moved its own vendor payments to Global Payouts, its product for paying recipients in 160+ countries, starting in early 2026. New-market setup fell from six weeks to one with a 99.9% payout success rate.",
+          "tag": "other"
+        },
+        {
+          "id": 28,
+          "summary": "Latent Space interviews Jacob Lauritzen, CTO of Legora, after the company's $550M Series E at an $8.8B valuation. The conversation covers what it takes to build AI agents for lawyers.",
+          "tag": "agent-readiness"
+        }
+      ]
+    },
+    "stop_reason": "hand-made",
+    "sdk_cost_usd": null,
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    }
+  },
+  "Editor": {
+    "model": "claude-sonnet-5-5",
+    "response": {
+      "intro": "This week's thread is the gap between AI that is bought and AI that is operated: Salesforce's 20-second lead routing, HubSpot's AEO measurement problem and n8n's automation-team redesign are all operating-model stories. On the readiness side, MCP's SDK tiering and always-on agents like Claude Duet show the protocol and product layers moving faster than most marketing stacks.",
+      "picks": [
+        {
+          "id": 9,
+          "post_angle": "Salesforce cut lead assignment from 20 minutes to 20 seconds; the win was routing rules that stopped lagging the territory redraw by six weeks.",
+          "why": "Concrete before/after number from a real ops process."
+        },
+        {
+          "id": 1,
+          "post_angle": "Before you buy AI context from a martech vendor, inventory what your ops team already documents; most of that context is yours.",
+          "why": "Names the buying trap ops leaders face right now."
+        },
+        {
+          "id": 7,
+          "post_angle": "HubSpot's State of AEO 2026 puts measurement as B2B marketers' top AEO challenge at 23%; the reporting stack has to catch up to the channel.",
+          "why": "A survey number on a measurement gap ops owns."
+        },
+        {
+          "id": 17,
+          "post_angle": "n8n is moving its automation team off the service-desk model because that model hits a limit; the four replacement principles are the useful part.",
+          "why": "Operating-model change from a team that runs automation daily."
+        },
+        {
+          "id": 20,
+          "post_angle": "An always-on agent that sends a morning brief and checks your apps only works if your apps are connected and governed; that's the ops job.",
+          "why": "Agent readiness framed as integration and governance work."
+        },
+        {
+          "id": 21,
+          "post_angle": "MCP now has six Tier 1 SDKs, Ruby joining TypeScript, Python, C#, Go and Rust; the protocol layer is maturing faster than martech stacks.",
+          "why": "Protocol maturity is the readiness signal, not the vendor demo."
+        },
+        {
+          "id": 8,
+          "post_angle": "HubSpot's list of Claude integrations for the GTM stack is really a list of systems you'd have to govern before an agent touches your CRM.",
+          "why": "Turns a vendor how-to into an ops readiness checklist."
+        }
+      ]
+    },
+    "stop_reason": "hand-made",
+    "sdk_cost_usd": null,
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    }
+  },
+  "Writer": {
+    "model": "claude-sonnet-5-5",
+    "response": {
+      "drafts": [
+        {
+          "id": 9,
+          "pillar": "Impact",
+          "anchor": "owned the Eloqua-to-Salesforce lead funnel; Monday.com intake cut from 12 steps to 1",
+          "post": "Twenty minutes to twenty seconds. That's the lead-assignment change Salesforce describes in its own Data 360 write-up this week, and the part that caught me wasn't the speed.\n\nIt was the lag they fixed. Every year the territories get redrawn and the routing rules refreshed, often two weeks before they take effect. Under the old process, leads could follow outdated rules for up to six weeks afterward. Six weeks of leads landing with the wrong rep is a revenue problem dressed up as a data problem.\n\nI've lived the smaller version. At Level 3 I owned the Eloqua-to-Salesforce lead funnel, and the routing table was the thing nobody wanted to touch because it was the thing everybody depended on. Later, at a global professional association, we cut a Monday.com intake from 12 steps to 1, and the lesson was the same: the win is rarely the tool, it's removing the handoff where stale rules hide.\n\nWhat I'd want to know before copying this: who owns the routing rules now, and what happens the week the territory model changes again? Automation that follows the rules faster also follows the wrong rules faster.\n\nIf you've moved lead routing onto a real-time data layer, how did you keep the rules themselves current? Happy to compare notes.\n\n#marketingops #leadrouting #salesops #revops"
+        },
+        {
+          "id": 17,
+          "pillar": "Scale",
+          "anchor": "1,000+ projects a year; founded the Marketing PMO, Creative Ops and Event Ops functions, 35 FTE and up to 75 with agencies",
+          "post": "The service desk model works right up until it doesn't, and n8n just said out loud when that is.\n\nIn the first piece of its n8n on n8n series, Romina da Costa, who runs internal AI and automation there, explains where a ticket-driven automation team hits its limit and lays out the four principles her team follows now. I won't repeat them here; read the post. What I want to talk about is why this happens to every ops team that gets good.\n\nAt Lumen we ran 1,000+ projects a year through Creative Operations. The intake queue was our service desk. It was fair, it was visible, and it quietly turned a team of builders into a team of order-takers. The requests that came in were the requests people already knew how to ask for. Nobody files a ticket for the process they can't see.\n\nAt a global professional association I founded the Marketing PMO, Creative Ops and Event Ops functions, 35 FTE and up to 75 with agencies, and the same pull showed up within a year. The fix was never a better queue. It was deciding which problems the team went looking for instead of waiting to be handed.\n\nAI makes this sharper, not softer. An automation team that only builds what's requested will automate the existing workflow, including the parts that shouldn't exist.\n\nWhere does your automation or ops team sit today: taking tickets, or picking problems?\n\n#marketingops #automation #operatingmodel #scale"
+        },
+        {
+          "id": 7,
+          "pillar": "MarTech",
+          "anchor": "unified 7 data sources into one marketing performance dashboard; consolidated tracking and reporting of the $100M+ marketing budget from 26 marketers to 3",
+          "post": "When 23% of B2B marketers say measuring success is their top AEO challenge, the problem isn't AEO. It's the reporting stack.\n\nThat number is from HubSpot's State of AEO 2026 report, cited in a HubSpot piece this week on benchmarking AI search performance against your industry. New channel, old pattern: the tactics arrive first, the measurement arrives last, and the dashboard arrives after the budget conversation has already happened.\n\nI've built that dashboard before. At Level 3 we unified 7 data sources into one marketing performance view, and the hard part was never the charts. It was agreeing what a source counted as and who owned the definition when two systems disagreed. At Lumen, consolidating tracking and reporting of a $100M+ marketing budget from 26 marketers to 3 taught the same lesson at a bigger scale: measurement is a governance decision wearing a tooling costume.\n\nAI answer engines add a twist. There's no shared log of what the engine showed whom, so the benchmark is partly reconstruction. That makes the definition work more important, not less.\n\nIf you're being asked to report on AEO today, I'd start with one question: which existing number in your stack would you accept getting worse in exchange for AI visibility going up? If nobody can answer, the benchmark won't matter yet.\n\nHow are you measuring AI search visibility, and who in your org owns the definition?\n\n#martech #marketinganalytics #aeo #marketingops"
+        }
+      ]
+    },
+    "stop_reason": "hand-made",
+    "sdk_cost_usd": null,
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 0
+    }
+  }
+}
