@@ -27,7 +27,7 @@ Shape of a run (2026-11-05): 15 feeds → 2,072 RSS items → 106 from the last 
 
 ## G1·C (code) — side by side with G1·B for the same week of sources (AC 5)
 
-Prices: G1·C has no price table of its own; cost is computed from the response `usage` with G0's `evaluation.PRICES_PER_MTOK` (D-27), which equals D-8. Model ids and prices re-checked 2026-11-06 against secondary sources (Anthropic's own page not fetchable unattended): Haiku 5.5 $0.10/$0.50 (≤100K prompt), Sonnet 5.5 $2/$10. Source of truth for G1·C is G0's `run_log` table (`G0_DB_PATH`), one row per agent call with `run_id = g1c-<week>-<HHMMSS>`; `out/<week>/cost.json` is the per-run copy.
+Prices: G1·C has no price table of its own; cost is computed from the response `usage` with G0's `evaluation.PRICES_PER_MTOK` (D-28), which equals D-8. Model ids and prices re-checked 2026-11-06 against secondary sources (Anthropic's own page not fetchable unattended): Haiku 5.5 $0.10/$0.50 (≤100K prompt), Sonnet 5.5 $2/$10. Source of truth for G1·C is G0's `run_log` table (`G0_DB_PATH`), one row per agent call with `run_id = g1c-<week>-<HHMMSS>`; `out/<week>/cost.json` is the per-run copy.
 
 **Status 2026-11-06: no `ANTHROPIC_API_KEY` was present in the G1·C build run, so no live G1·C call has been made. G1·C is "not measured" below.** The G1·B column is exec 8 of 2026-11-05 (the run with the Writer, the same shape as G1·C). The G1·C column fills in after hand step H5 (`uv run scout --fixtures --record`, then `uv run scout --live`); paste the rows `scout` prints.
 
@@ -40,7 +40,7 @@ Prices: G1·C has no price table of its own; cost is computed from the response 
 | **Run total** | | | **$0.0679** | | **not measured** |
 
 What will differ when G1·C is measured, and why:
-- **Prompts are shorter.** G1·C's system prompts drop the verbatim `claim_rule`, `brand_voice` and `run_logging` blocks (D-23) for one-line pointers: measured on the prompts themselves, 35 fewer words for the Researcher and the Summarizer (272 → 237, 267 → 232) and 111 fewer for the Editor and the Writer (439 → 328, 941 → 830), so input tokens should fall a little; the Editor's per-call cost (80% of the run) is dominated by the item payload, not the rules.
+- **Prompts are shorter.** G1·C's system prompts drop the verbatim `claim_rule`, `brand_voice` and `run_logging` blocks (D-24) for one-line pointers: measured on the prompts themselves, 35 fewer words for the Researcher and the Summarizer (272 → 237, 267 → 232) and 111 fewer for the Editor and the Writer (439 → 328, 941 → 830), so input tokens should fall a little; the Editor's per-call cost (80% of the run) is dominated by the item payload, not the rules.
 - **Cache tokens are counted at the input price.** The SDK reports `cache_read_input_tokens` and `cache_creation_input_tokens`; G1·C bills them as input (upper bound) and keeps the SDK's own `total_cost_usd` in the note for comparison. G1·B saw no cache usage (one HTTP request per agent).
 - **The shared-layer checks cost nothing.** `claims_registry`, `brand_policy`, `observability`, `measurement` and the deterministic `evaluation` judge make no model call. `--judge claude` would add judged evaluations as logged, capped calls under the same `run_id`.
 

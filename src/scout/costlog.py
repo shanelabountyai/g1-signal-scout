@@ -1,4 +1,4 @@
-"""Cost log per run (C5, D-27): what each agent cost, from the response usage at G0's prices.
+"""Cost log per run (C5, D-28): what each agent cost, from the response usage at G0's prices.
 
 Written to out/<week>/cost.json and printed as the Markdown row block that goes into docs/run-log.md.
 G1·C has no price table of its own; `Layer.cost_usd` reads G0's `evaluation.PRICES_PER_MTOK`.

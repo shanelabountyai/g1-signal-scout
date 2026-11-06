@@ -1,4 +1,4 @@
-"""C4: AC 1–3 against SQLite, in G1·B's order (D-26). Sinks: local tested, failing used for AC 3, Drive constructor only."""
+"""C4: AC 1–3 against SQLite, in G1·B's order (D-27). Sinks: local tested, failing used for AC 3, Drive constructor only."""
 
 from __future__ import annotations
 

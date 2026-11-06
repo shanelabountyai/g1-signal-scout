@@ -1,10 +1,10 @@
 # NEXT
 
-State (2026-11-06, end of the unattended G1·C build run on Fable): **G1·C built on branch `g1c`**, one PR open against `main`, unmerged. **54 tests pass** (no network, no model call). **Cost of live model calls this run: $0.00** — no `ANTHROPIC_API_KEY` was present, so the agents ran on fixtures with a hand-made recorded-response file (D-29) and G1·C's cost is **not measured** (`docs/run-log.md`).
+State (2026-11-06, end of the unattended G1·C build run on Fable): **G1·C built on branch `g1c`**, one PR open against `main`, unmerged. **54 tests pass** (no network, no model call). **Cost of live model calls this run: $0.00** — no `ANTHROPIC_API_KEY` was present, so the agents ran on fixtures with a hand-made recorded-response file (D-30) and G1·C's cost is **not measured** (`docs/run-log.md`).
 
 G1·B (n8n) is unchanged and still scheduled: first automatic run Monday 2026-11-09 06:00 CT (D-18). G0·C was read at `g0-shared-layer@kickoff` commit `1cb74df` and is pinned to it; nothing was pushed there.
 
-## Done (C1–C7, D-22..D-32)
+## Done (C1–C7, D-23..D-34)
 
 - **C1** `uv run scout --dry-run`: G0 `health` first, 45 fixture items → 29 fresh → 29 unseen, no model call.
 - **C2** Typed hand-offs `Item → SummarizedItem → DigestItem → Digest` (+ `PostDraft`, `Check`, `AgentUsage`, `RunCost`), round-trip tested.
@@ -18,7 +18,7 @@ G1·B (n8n) is unchanged and still scheduled: first automatic run Monday 2026-11
 
 - **No live G1·C run.** `fixtures/recorded-responses.json` is hand-made in each agent's schema (its `_about` says so). The pipeline, checks, sinks and seen-items order are tested end to end on it; the model outputs themselves are not real yet.
 - **Drive sink not exercised against Drive.** No service-account credentials in the environment.
-- **Anthropic's pricing page could not be fetched** by the unattended run (URL permission not grantable). Secondary sources dated 2026-10-08 and 2026-10-26 confirm D-8's ids and prices (D-27); the owner confirms on the page itself before the first live call.
+- **Anthropic's pricing page could not be fetched** by the unattended run (URL permission not grantable). Secondary sources dated 2026-10-08 and 2026-10-26 confirm D-8's ids and prices (D-28); the owner confirms on the page itself before the first live call.
 - **g0-shared-layer's `docs/attach.md` still shows its pre-G1·C estimate** (24 → 8 copies). The real numbers are in this repo's `docs/duplication-log.md`; G0's copy is read-only for this run and gets updated in a G0 session.
 
 ## Findings for G0 (not changed here)
@@ -28,7 +28,7 @@ G1·B (n8n) is unchanged and still scheduled: first automatic run Monday 2026-11
 ## Owner's hand steps
 
 1. **Review the `g1c` PR** (link in the PR list; it is not merged). Merge only on your own say-so.
-2. **H5 — first live run.** Confirm model ids and prices at Anthropic's pricing page against `docs/DECISIONS.md` D-8/D-27. Then, in the repo with `ANTHROPIC_API_KEY` in `.env`:
+2. **H5 — first live run.** Confirm model ids and prices at Anthropic's pricing page against `docs/DECISIONS.md` D-8/D-28. Then, in the repo with `ANTHROPIC_API_KEY` in `.env`:
    ```bash
    uv sync --all-groups
    uv run --env-file .env scout --fixtures --record      # replaces the hand-made recorded file with real responses (~$0.07)

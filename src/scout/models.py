@@ -1,4 +1,4 @@
-"""Typed hand-offs between the four agents (C2, D-24).
+"""Typed hand-offs between the four agents (C2, D-25).
 
 Researcher → list[Item] (the kept ones)
 Summarizer → list[SummarizedItem]
@@ -85,7 +85,7 @@ class AgentUsage(BaseModel):
     model: str
     input_tokens: int = 0
     output_tokens: int = 0
-    cost_usd: float = 0.0  # from usage × G0's PRICES_PER_MTOK (D-27)
+    cost_usd: float = 0.0  # from usage × G0's PRICES_PER_MTOK (D-28)
     sdk_cost_usd: float | None = None  # what the SDK itself reported, for comparison
     stop_reason: str | None = None
     duration_ms: int | None = None
@@ -98,7 +98,7 @@ class RunCost(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     run_id: str
-    measured: bool  # False when the agents answered from recorded responses (D-29)
+    measured: bool  # False when the agents answered from recorded responses (D-30)
     usages: list[AgentUsage] = Field(default_factory=list)
     total_cost_usd: float = 0.0
     cap_usd: float = 10.0

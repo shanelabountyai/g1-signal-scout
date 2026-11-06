@@ -1,4 +1,4 @@
-"""Agent specs for G1·C (C3, D-23).
+"""Agent specs for G1·C (C3, D-24).
 
 `n8n/prompts.py` stays the source of every agent instruction, schema and model;
 `tests/test_prompts.py` fails if the copies here drift from it. What is

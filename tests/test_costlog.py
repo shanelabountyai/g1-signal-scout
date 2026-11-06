@@ -1,4 +1,4 @@
-"""C5: cost per agent from usage at G0's prices; no second price table in G1·C (D-27)."""
+"""C5: cost per agent from usage at G0's prices; no second price table in G1·C (D-28)."""
 
 from __future__ import annotations
 

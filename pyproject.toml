@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "MIT" }
 dependencies = [
-    # The shared layer, pinned to the exact kickoff commit this build was read against (D-23).
+    # The shared layer, pinned to the exact kickoff commit this build was read against (D-24).
     # Move the pin to the v0.1.0 tag once the owner merges and tags g0-shared-layer.
     "g0-shared-layer @ git+https://github.com/shanelabountyai/g0-shared-layer@1cb74df6c3e4a5212f681f7f7bdf594b37b53070",
     "claude-agent-sdk>=0.2.170,<0.3",
@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Google Drive sink (D-25); not installed unless asked for.
+# Google Drive sink (D-26); not installed unless asked for.
 drive = ["google-api-python-client>=2.150", "google-auth>=2.35"]
 
 [project.scripts]

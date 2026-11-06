@@ -1,4 +1,4 @@
-"""The four agents and their hand-offs (C3, D-23, D-24, D-31).
+"""The four agents and their hand-offs (C3, D-24, D-25, D-32).
 
 Each agent is one model call. The join back to the original records is by
 integer id, unknown ids are dropped (D-14), and the shared layer is called by
@@ -28,7 +28,7 @@ from scout.prompts import EDITOR, RESEARCHER, SHANE_RECORD, SUMMARIZER, WRITER, 
 
 
 class OverCap(RuntimeError):
-    """observability reported over_cap; no further model call is made (D-27)."""
+    """observability reported over_cap; no further model call is made (D-28)."""
 
 
 class AgentFailed(RuntimeError):

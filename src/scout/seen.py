@@ -1,4 +1,4 @@
-"""seen_items in SQLite (C4, D-26). Same columns as G1·B's Data Table: url, title, source, seen_at.
+"""seen_items in SQLite (C4, D-27). Same columns as G1·B's Data Table: url, title, source, seen_at.
 
 The only writer is `mark_seen`, and the pipeline calls it only after the sink
 write succeeded. Nothing here deletes.

@@ -42,7 +42,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--fixtures-file", default=str(config.FIXTURES_JSON))
     p.add_argument("--recorded-file", default=str(config.RECORDED_JSON))
     p.add_argument("--as-of", default=None, help="ISO date for the freshness window (fixtures default to their newest item)")
-    p.add_argument("--judge", default="deterministic", choices=["deterministic", "claude", "fixture"], help="evaluation judge (D-31)")
+    p.add_argument("--judge", default="deterministic", choices=["deterministic", "claude", "fixture"], help="evaluation judge (D-32)")
     p.add_argument("--cap", type=float, default=None, help="override the $10 run cap (sets G0_RUN_CAP_USD)")
     return p
 
@@ -60,7 +60,7 @@ def choose_caller(args: argparse.Namespace, log) -> ModelCaller:
     if args.record and not key:
         raise SystemExit(f"--record needs {config.ENV_API_KEY}; without it the run replays the recorded file (exit 4)")
     rec = RecordedCaller(Path(args.recorded_file))
-    log(f"no {config.ENV_API_KEY}: agents answer from {args.recorded_file} ({'live recording' if rec.recorded_live else 'hand-made sample, D-29'}); cost not measured")
+    log(f"no {config.ENV_API_KEY}: agents answer from {args.recorded_file} ({'live recording' if rec.recorded_live else 'hand-made sample, D-30'}); cost not measured")
     return rec
 
 

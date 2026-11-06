@@ -1,4 +1,4 @@
-"""The model callers (D-24, D-29). The SDK is driven with a fake `query`; no network."""
+"""The model callers (D-25, D-30). The SDK is driven with a fake `query`; no network."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""DigestSink (C4, D-25): where the digest lands. The pipeline marks items seen only after `write` returns.
+"""DigestSink (C4, D-26): where the digest lands. The pipeline marks items seen only after `write` returns.
 
 LocalSink  — Markdown + JSON (+ the HTML the Doc conversion would use) under out/<week>/. Tested.
 DriveSink  — uploads the HTML as a Google Doc (same multipart conversion as G1·B's Write digest node) and the
@@ -69,7 +69,7 @@ class FailingSink:
 
 
 class DriveSink:
-    """Google Drive via a service account (D-25). The folder must be shared with the service account's email.
+    """Google Drive via a service account (D-26). The folder must be shared with the service account's email.
 
     Env: SCOUT_DRIVE_SERVICE_ACCOUNT_JSON (path to the key file), SCOUT_DRIVE_FOLDER_ID.
     Extra `drive`: `uv sync --extra drive` installs google-api-python-client and google-auth.

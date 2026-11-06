@@ -1,4 +1,4 @@
-"""The shared layer (G0·C), called in-process (D-23, D-30).
+"""The shared layer (G0·C), called in-process (D-24, D-31).
 
 One thin adapter so every capability call in the scout goes through one place
 and is counted. Every method returns the capability's typed `Output`; a
@@ -77,7 +77,7 @@ class Layer:
     def record(self, event: str, fields: dict[str, Any], run_id: str, agent: str = "scout") -> measurement.Output:
         return self._run(measurement, event=event, fields=fields, run_id=run_id, agent=agent)
 
-    # -- cost helpers (G0's price table; G1·C has none of its own, D-27) ----------
+    # -- cost helpers (G0's price table; G1·C has none of its own, D-28) ----------
 
     @staticmethod
     def prices_per_mtok() -> dict[str, tuple[float, float]]:

@@ -152,7 +152,7 @@ def newest_date(raws: list[RawItem]) -> datetime | None:
 
 
 def normalize(raws: list[RawItem], feed_list: list[Feed], as_of: datetime | None = None, fresh_days: int = FRESH_DAYS) -> list[Item]:
-    """RSS Read items → Items. `as_of` is "now" for the freshness window (fixtures pass their newest date, D-32)."""
+    """RSS Read items → Items. `as_of` is "now" for the freshness window (fixtures pass their newest date, D-33)."""
     now = as_of or datetime.now(UTC)
     cutoff = now - timedelta(days=fresh_days)
     sources = {host_of(f.url): f.source for f in feed_list}

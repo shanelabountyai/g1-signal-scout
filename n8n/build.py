@@ -400,14 +400,14 @@ def duplication_log() -> str:
               "| Join model output back to the original record by id; drop unknown ids (claim rule enforced in code) | After Researcher, After Summarizer, Compose digest | 3 |",
               "| Parse the first text block of a structured-output response | After Researcher, After Summarizer, Compose digest (`PARSE_JS`) | 3 |",
               "| Messages API request shape (model, max_tokens, system, output_config, credential, version header) | Pack items, After Researcher, After Summarizer + the three HTTP Request nodes | 3 |",
-              "| Token and cost accounting at D-8 prices | Compose digest (`PRICES`) | 1 in n8n; G1·C carries none (it reads G0's `evaluation.PRICES_PER_MTOK`, D-27) |",
+              "| Token and cost accounting at D-8 prices | Compose digest (`PRICES`) | 1 in n8n; G1·C carries none (it reads G0's `evaluation.PRICES_PER_MTOK`, D-28) |",
               ""]
     lines += after_attach_section()
     return "\n".join(lines)
 
 
 def after_attach_section() -> list[str]:
-    """The G1 half of G0's AC 5: what G1·C still carries after attaching to the shared layer (D-23, 2026-11-06).
+    """The G1 half of G0's AC 5: what G1·C still carries after attaching to the shared layer (D-24, 2026-11-06).
     Numbers are counted from the source: n8n/prompts.py (before) and src/scout/prompts.py + src/scout/agents.py (after)."""
     before = {k: len([a for a in prompts.AGENTS if k in a["rules"]]) for k in prompts.SHARED}
     rows = [
@@ -416,7 +416,7 @@ def after_attach_section() -> list[str]:
         ("brand_voice", before["brand_voice"], 0, "**G0** `brand_policy` (policy v1 is G1's text, verbatim) + `evaluation(post_angle_v1)`, called on every angle and draft. One-line pointer in the Editor and Writer prompts."),
         ("run_logging", before["run_logging"], 0, "**G0** `observability`, called after every model call with the response usage; run total and $10 cap come back. One-line pointer in every prompt."),
     ]
-    out = ["## After attaching to G0 (G1·C, branch `g1c`, 2026-11-06; D-23)", "",
+    out = ["## After attaching to G0 (G1·C, branch `g1c`, 2026-11-06; D-24)", "",
            "G1·B (n8n) still carries every copy above and keeps running as shipped. G1·C (code) attaches to the shared layer "
            "`shanelabountyai/g0-shared-layer` (pinned in `pyproject.toml`) and carries only `topic_brief`. "
            "`tests/test_prompts.py` fails if a moved rule reappears in a G1·C prompt. These are the real numbers for the G1 half of G0's "

@@ -1,4 +1,4 @@
-"""One run of the scout (C1–C5). The order is G1·B's (D-26):
+"""One run of the scout (C1–C5). The order is G1·B's (D-27):
 
   health → feeds → normalize → drop seen → Researcher → Summarizer → Editor → Writer
   → (every model call already logged to observability) → sink.write
@@ -58,7 +58,7 @@ def gather_items(feed_list: list[Feed], fixtures: Path | None, as_of: datetime |
     """Raw items from fixtures or the live feeds, normalized. Returns (items, raw_count, as_of used)."""
     if fixtures is not None:
         raws = feedmod.load_fixtures(fixtures)
-        as_of = as_of or feedmod.newest_date(raws)  # D-32: saved fixtures do not go stale
+        as_of = as_of or feedmod.newest_date(raws)  # D-33: saved fixtures do not go stale
     else:
         raws = feedmod.fetch_all(feed_list, on_error=on_feed_error)
     return feedmod.normalize(raws, feed_list, as_of=as_of), len(raws), as_of

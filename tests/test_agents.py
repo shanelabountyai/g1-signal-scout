@@ -1,4 +1,4 @@
-"""C3: the four agents attached to G0 (D-23, D-31). No model call anywhere in here."""
+"""C3: the four agents attached to G0 (D-24, D-32). No model call anywhere in here."""
 
 from __future__ import annotations
 

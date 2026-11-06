@@ -20,8 +20,8 @@ RECORDED_JSON = REPO_ROOT / "fixtures" / "recorded-responses.json"
 OUT_DIR = REPO_ROOT / "out"
 
 FRESH_DAYS = 7  # same window as G1·B's Normalize node
-ENV_DB_PATH = "SCOUT_DB_PATH"  # seen_items SQLite (D-26)
-ENV_DRIVE_SA = "SCOUT_DRIVE_SERVICE_ACCOUNT_JSON"  # path to a service-account key file (D-25)
+ENV_DB_PATH = "SCOUT_DB_PATH"  # seen_items SQLite (D-27)
+ENV_DRIVE_SA = "SCOUT_DRIVE_SERVICE_ACCOUNT_JSON"  # path to a service-account key file (D-26)
 ENV_DRIVE_FOLDER = "SCOUT_DRIVE_FOLDER_ID"
 ENV_API_KEY = "ANTHROPIC_API_KEY"
 ENV_G0_DB = "G0_DB_PATH"  # read by the shared layer itself

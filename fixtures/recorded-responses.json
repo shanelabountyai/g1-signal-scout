@@ -1,5 +1,5 @@
 {
-  "_about": "HAND-MADE SAMPLE, NOT A RECORDING (D-29). No ANTHROPIC_API_KEY was present in the unattended G1·C build run of 2026-11-06, so these responses were written by hand in each agent's output schema from fixtures/feed-items.json (29 fresh items after normalization, ids 0-28 in fixture order). They exist so the pipeline, the shared-layer checks, the sinks and the seen-items order can run and be tested end to end without a model call. Usage is zero on purpose and `recorded_live` is false, so the cost shows as 'not measured'. Replace this file with a live recording: `ANTHROPIC_API_KEY=... uv run scout --fixtures --record`.",
+  "_about": "HAND-MADE SAMPLE, NOT A RECORDING (D-30). No ANTHROPIC_API_KEY was present in the unattended G1·C build run of 2026-11-06, so these responses were written by hand in each agent's output schema from fixtures/feed-items.json (29 fresh items after normalization, ids 0-28 in fixture order). They exist so the pipeline, the shared-layer checks, the sinks and the seen-items order can run and be tested end to end without a model call. Usage is zero on purpose and `recorded_live` is false, so the cost shows as 'not measured'. Replace this file with a live recording: `ANTHROPIC_API_KEY=... uv run scout --fixtures --record`.",
   "recorded_live": false,
   "recorded_at": null,
   "Researcher": {

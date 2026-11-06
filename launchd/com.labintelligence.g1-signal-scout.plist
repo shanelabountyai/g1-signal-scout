@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  G1·C scheduler (C6, D-28). Weekly Signal Scout, code version, on the owner's Mac.
+  G1·C scheduler (C6, D-29). Weekly Signal Scout, code version, on the owner's Mac.
   Fire time per D-11: Monday 06:00 America/Chicago. launchd uses the Mac's local clock, so this is
   correct while the Mac's time zone is America/Chicago; if the Mac travels, the run moves with it.
 

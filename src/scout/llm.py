@@ -1,4 +1,4 @@
-"""Model calls (C3, D-24, D-29).
+"""Model calls (C3, D-25, D-30).
 
 `AgentSdkCaller` makes one structured-output call per agent through the Claude
 Agent SDK (`claude_agent_sdk.query`): no tools, one turn, the agent's JSON
@@ -128,7 +128,7 @@ def _parse_json(text: str, agent: str) -> dict[str, Any]:
 
 class RecordedCaller:
     """Answers each agent from a file keyed by agent name. `measured` is False: the usage numbers in the file
-    are whatever was recorded (zeros for the hand-made file, D-29) and never go into the cost comparison."""
+    are whatever was recorded (zeros for the hand-made file, D-30) and never go into the cost comparison."""
 
     name = "recorded"
     measured = False

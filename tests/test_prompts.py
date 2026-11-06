@@ -1,5 +1,5 @@
-"""n8n/prompts.py is the source of every agent instruction (D-22). This test fails if G1·C's copies drift,
-and proves the three shared rules G0 now supplies are gone from G1·C's prompts (D-23)."""
+"""n8n/prompts.py is the source of every agent instruction (D-23). This test fails if G1·C's copies drift,
+and proves the three shared rules G0 now supplies are gone from G1·C's prompts (D-24)."""
 
 from __future__ import annotations
 
