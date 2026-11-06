@@ -1,6 +1,6 @@
 # NEXT
 
-State (2026-11-06, end of the unattended G1·C build run on Fable): **G1·C built on branch `g1c`**, one PR open against `main`, unmerged. **54 tests pass** (no network, no model call). **Cost of live model calls this run: $0.00** — no `ANTHROPIC_API_KEY` was present, so the agents ran on fixtures with a hand-made recorded-response file (D-30) and G1·C's cost is **not measured** (`docs/run-log.md`).
+State (2026-11-06, end of the unattended G1·C build run on Fable): **G1·C built on branch `g1c`**, one PR open against `main` (https://github.com/shanelabountyai/g1-signal-scout/pull/1), unmerged. **54 tests pass** (no network, no model call). **Cost of live model calls this run: $0.00** — no `ANTHROPIC_API_KEY` was present, so the agents ran on fixtures with a hand-made recorded-response file (D-30) and G1·C's cost is **not measured** (`docs/run-log.md`).
 
 G1·B (n8n) is unchanged and still scheduled: first automatic run Monday 2026-11-09 06:00 CT (D-18). G0·C was read at `g0-shared-layer@kickoff` commit `1cb74df` and is pinned to it; nothing was pushed there.
 
@@ -27,7 +27,7 @@ G1·B (n8n) is unchanged and still scheduled: first automatic run Monday 2026-11
 
 ## Owner's hand steps
 
-1. **Review the `g1c` PR** (link in the PR list; it is not merged). Merge only on your own say-so.
+1. **Review the `g1c` PR**: https://github.com/shanelabountyai/g1-signal-scout/pull/1 (not merged). Merge only on your own say-so.
 2. **H5 — first live run.** Confirm model ids and prices at Anthropic's pricing page against `docs/DECISIONS.md` D-8/D-28. Then, in the repo with `ANTHROPIC_API_KEY` in `.env`:
    ```bash
    uv sync --all-groups
