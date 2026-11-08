@@ -1,6 +1,6 @@
 # NEXT
 
-State (2026-11-06, end of the unattended G1·C build run on Fable): **G1·C built on branch `g1c`**, one PR open against `main` (https://github.com/shanelabountyai/g1-signal-scout/pull/1), unmerged. **54 tests pass** (no network, no model call). **Cost of live model calls this run: $0.00** — no `ANTHROPIC_API_KEY` was present, so the agents ran on fixtures with a hand-made recorded-response file (D-30) and G1·C's cost is **not measured** (`docs/run-log.md`).
+State (2026-11-08): **G1·C is merged to `main` (PR #1) and H5 is done**: first live runs made, fixture recording is now real model output (`fixtures/recorded-responses.json`; the old hand-made file is frozen at `tests/data/handmade-responses.json` for the tests). **54 tests pass.** Live G1·C run on this week's feeds: 100 fresh → 33 on topic → 8 picked, 3 drafted, **$0.0764** vs G1·B's $0.0679 (`docs/run-log.md`). Spent on live calls so far ≈ $0.33 of the $10 cap (G1·B ≈ $0.20 + $0.051 + $0.076).
 
 G1·B (n8n) is unchanged and still scheduled: first automatic run Monday 2026-11-09 06:00 CT (D-18). G0·C was read at `g0-shared-layer@kickoff` commit `1cb74df` and is pinned to it; nothing was pushed there.
 
@@ -28,13 +28,7 @@ G1·B (n8n) is unchanged and still scheduled: first automatic run Monday 2026-11
 ## Owner's hand steps
 
 1. **Review the `g1c` PR**: https://github.com/shanelabountyai/g1-signal-scout/pull/1 (not merged). Merge only on your own say-so.
-2. **H5 — first live run.** (Prices confirmed on Anthropic's page 2026-11-06, D-35; PR #1 merged.) In the repo with `ANTHROPIC_API_KEY` in `.env`:
-   ```bash
-   uv sync --all-groups
-   uv run --env-file .env scout --fixtures --record      # replaces the hand-made recorded file with real responses (~$0.07)
-   uv run --env-file .env scout --live                   # the comparison run on this week's feeds; paste the printed rows into docs/run-log.md
-   ```
-   Commit `fixtures/recorded-responses.json` and `docs/run-log.md` afterwards.
+2. **H5 — first live run: done 2026-11-08.**
 3. **Move the G0 pin to a tag** once `g0-shared-layer` `kickoff` is merged and tagged `v0.1.0`: edit `pyproject.toml`, `uv lock`, commit.
 4. **H6 — Drive sink (optional).** Create a Google Cloud service account, share the "Signal Scout" Drive folder with its email, save the key JSON outside the repo, set `SCOUT_DRIVE_SERVICE_ACCOUNT_JSON` and `SCOUT_DRIVE_FOLDER_ID` in `.env`, `uv sync --extra drive`, then `uv run --env-file .env scout --fixtures --sink drive` once to prove the upload.
 5. **H7 — schedule (only if you want G1·C to run on its own).** Edit the paths in `launchd/com.labintelligence.g1-signal-scout.plist`, copy it to `~/Library/LaunchAgents/`, `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.labintelligence.g1-signal-scout.plist`. Until then it is not loaded. Note that G1·B's n8n schedule is already on: two scouts would fire on Mondays and both would mark items seen in their own stores.

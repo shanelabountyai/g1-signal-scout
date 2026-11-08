@@ -47,9 +47,12 @@ def items(raw_items, feed_list) -> list[Item]:
     return feeds.normalize(raw_items, feed_list, as_of=feeds.newest_date(raw_items))
 
 
+HANDMADE = Path(__file__).parent / "data" / "handmade-responses.json"  # frozen hand-made sample (D-30); fixtures/ holds the live recording
+
+
 @pytest.fixture(scope="session")
 def recorded() -> dict[str, Any]:
-    return json.loads(config.RECORDED_JSON.read_text(encoding="utf-8"))
+    return json.loads(HANDMADE.read_text(encoding="utf-8"))
 
 
 class ScriptedCaller:

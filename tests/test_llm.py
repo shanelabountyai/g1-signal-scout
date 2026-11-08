@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -10,9 +11,11 @@ from scout import config
 from scout.llm import AgentSdkCaller, ModelCallError, RecordedCaller, RecordingCaller
 from scout.prompts import EDITOR, RESEARCHER
 
+HANDMADE = Path(__file__).parent / "data" / "handmade-responses.json"  # the real recording lives in fixtures/
+
 
 async def test_recorded_caller_replays_the_fixture_file():
-    rc = RecordedCaller(config.RECORDED_JSON)
+    rc = RecordedCaller(HANDMADE)
     assert rc.measured is False and rc.recorded_live is False and "HAND-MADE" in rc.about
     r = await rc.call(RESEARCHER, "ignored")
     assert r.agent == "Researcher" and r.model == "claude-haiku-5-5"
@@ -22,7 +25,7 @@ async def test_recorded_caller_replays_the_fixture_file():
 
 
 async def test_recorded_fixture_matches_each_agent_schema_shape():
-    doc = json.loads(config.RECORDED_JSON.read_text())
+    doc = json.loads(HANDMADE.read_text())
     for name, required in [("Researcher", "items"), ("Summarizer", "items"), ("Editor", "picks"), ("Writer", "drafts")]:
         assert required in doc[name]["response"]
     assert all(set(d) == {"id", "pillar", "anchor", "post"} for d in doc["Writer"]["response"]["drafts"])

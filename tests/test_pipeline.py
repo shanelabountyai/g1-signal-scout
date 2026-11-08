@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from datetime import UTC, datetime
 
 import pytest
@@ -145,7 +146,7 @@ def test_cli_dry_run_and_fixture_run(tmp_path, monkeypatch, capsys):
     assert main(["--dry-run", "--db", db, "--g0-db", g0, "--out", str(tmp_path / "out")]) == 0
     out = capsys.readouterr().out
     assert "# dry run" in out and "29 unseen of 29 fresh from 15 feeds" in out
-    assert main(["--fixtures", "--db", db, "--g0-db", g0, "--out", str(tmp_path / "out")]) == 0
+    assert main(["--fixtures", "--recorded-file", str(Path(__file__).parent / "data" / "handmade-responses.json"), "--db", db, "--g0-db", g0, "--out", str(tmp_path / "out")]) == 0
     out = capsys.readouterr().out
     assert "7 picks, 3 drafts" in out and "not measured" in out
     cost = json.loads((tmp_path / "out" / "2026-11-02" / "cost.json").read_text())
