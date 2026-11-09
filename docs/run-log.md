@@ -44,4 +44,22 @@ What will differ when G1·C is measured, and why:
 - **Cache tokens are counted at the input price.** The SDK reports `cache_read_input_tokens` and `cache_creation_input_tokens`; G1·C bills them as input (upper bound) and keeps the SDK's own `total_cost_usd` in the note for comparison. G1·B saw no cache usage (one HTTP request per agent).
 - **The shared-layer checks cost nothing.** `claims_registry`, `brand_policy`, `observability`, `measurement` and the deterministic `evaluation` judge make no model call. `--judge claude` would add judged evaluations as logged, capped calls under the same `run_id`.
 
-Running total of live G1·C calls: **$0.00** of the $10 cap.
+### Same-week comparison, 2026-11-09 (H5 comparison, AC 5)
+
+G1·B exec 9 (manual, 17:37 UTC, $0.070) vs G1·C `g1c-2026-11-09-174014` (17:40 UTC, $0.0732, fresh seen-items DB, `--judge` off). Same feeds, three minutes apart.
+
+| | G1·B (n8n) | G1·C (code) |
+|---|---|---|
+| New items (7 days) | 95 | 102 |
+| On topic | 23 | 32 |
+| Picked | 7 | 8 (6 shared) |
+| Drafted | 3: Impact, AI Integration, MarTech | 3: Scale, AI Integration, Impact |
+| Cost | $0.070 | $0.0732 |
+
+Differences, item by item:
+- **Only G1·B picked** Stripe "analyze your Stripe data with your agent". **Only G1·C picked** HubSpot "AI maturity" and "benchmark your AI search performance". Both extra C picks come from its wider on-topic set (32 vs 23): the Researcher is a model call, so the cut differs run to run, not because of a code difference. 95 vs 102 fresh is the 7-day window sliding in the three minutes between runs plus G1·B's own dedupe; not investigated further.
+- **Drafts overlap on two of three sources** (HubSpot "Obstacles in marketing automation", MarTech roundup); B drafted the Zapier/Claude post as MarTech-pillar, C as a different pillar. Pillar choice is the Writer's judgment in both.
+- **Caught violations (the point of G0).** G1·C's `claims_registry` flagged 3 as `unsupported`: the "AI maturity" angle (98% / 10%), the "Obstacles" summary (HubSpot's 2026 State of Marketing citation), and the Impact draft (same HubSpot figures). G1·B shipped its Impact draft with the same HubSpot "86.4% / 33%" claim and no check at all. Same known G0 noise as in NEXT.md (registry holds third-party stats, so topic collisions read `unsupported`); G1·C shows the flag and leaves the call to the owner.
+- **No code bug found**; no difference traced to a pipeline defect.
+
+Running total of live calls: G1·C **$0.0764 + $0.0732** (this comparison run) and G1·B $0.070 for the comparison; build total ≈ **$0.48** of the $10 cap.

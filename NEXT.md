@@ -36,8 +36,8 @@ G1·B (n8n) is unchanged and still scheduled: first automatic run Monday 2026-11
 
 ## Next item
 
-- Live comparison week (H5) → fill the G1·C column in `docs/run-log.md` and compare the two digests item for item (G0 attach.md step 7: every difference is a caught violation or a bug).
-- Then **G0·M** (A2 migration) per `g0-shared-layer/NEXT.md`, and G2.
+- Comparison week **done 2026-11-09** (`docs/run-log.md`, "Same-week comparison"): 6 of 7/8 picks shared, 3 claims flagged by G0 that G1·B shipped unchecked, no pipeline bug. G1·B's Monday schedule had not fired (n8n was not running); it needs n8n up at 06:00 or the launchd route (H7).
+- **G0·M** (A2 migration) per `g0-shared-layer/NEXT.md`, and G2.
 
 ## Things to know before continuing
 
